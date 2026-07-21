@@ -15,6 +15,7 @@
 
 import snapshot from "./mom-snapshot.json";
 import trainerSnapshot from "./trainer-snapshot.json";
+import productionSnapshot from "./production-snapshot.json";
 import { bucketAvg } from "./momScale";
 import type {
   Advocate,
@@ -126,6 +127,16 @@ type SnapRow = [
   [number, number, number], [number, number, number], [number, number, number],
 ];
 
+// Production MOM overlay (matched by EMPLOYEE_ID; email matches equivalently).
+type ProdRow = [string, number, [number, number, number], [number, number, number], [number, number, number]];
+const PRODUCTION = new Map<string, { mom: number; calls: number }>();
+(productionSnapshot.rows as ProdRow[]).forEach(([id, calls, comp, clar, heard]) => {
+  const pc = bucketAvg({ POOR: comp[0], AVERAGE: comp[1], GREAT: comp[2] });
+  const pl = bucketAvg({ POOR: clar[0], AVERAGE: clar[1], GREAT: clar[2] });
+  const ph = bucketAvg({ POOR: heard[0], AVERAGE: heard[1], GREAT: heard[2] });
+  PRODUCTION.set(String(id), { mom: r1((pc + pl + ph) / 3), calls });
+});
+
 function buildAdvocate(row: SnapRow): Advocate {
   const [id, name, email, leader, hireDate, job, employed, sims, comp, clar, heard] = row;
   void employed;
@@ -135,8 +146,14 @@ function buildAdvocate(row: SnapRow): Advocate {
     heard: bucketAvg({ POOR: heard[0], AVERAGE: heard[1], GREAT: heard[2] }),
   };
   const roleplayMom = r1((cats.comprehension + cats.clarity + cats.heard) / 3);
-  // Provisional readiness: roleplay only (Production MOM / Assessment / Attendance pending).
-  const composite = round(roleplayMom * 20);
+  // Production MOM (real when the advocate has production calls; else pending).
+  const prod = PRODUCTION.get(id) || null;
+  const productionMom = prod ? prod.mom : null;
+  // Provisional readiness: roleplay + production when both present, else roleplay only.
+  // (Assessment / Attendance still pending.)
+  const composite = prod
+    ? round(((roleplayMom + prod.mom) / 2) * 20)
+    : round(roleplayMom * 20);
   const g = gradeOf(composite).letter;
   const sorted: CatScore[] = CATEGORIES.map((c) => ({ ...c, val: cats[c.key] })).sort((a, b) => b.val - a.val);
   const first = name.split(" ")[0];
@@ -151,12 +168,12 @@ function buildAdvocate(row: SnapRow): Advocate {
   return {
     id, name, email, cohort: null,
     composite, grade: g,
-    roleplayMom, productionMom: null,
-    roleplay: round(roleplayMom * 20), production: null,
+    roleplayMom, productionMom,
+    roleplay: round(roleplayMom * 20), production: prod ? round(prod.mom * 20) : null,
     assessment: null, attendance: null,
     delta: 0,
     cats, strength: sorted[0], opportunity: sorted[sorted.length - 1],
-    sessions: sims, liveCalls: 0, missed: 0, note,
+    sessions: sims, liveCalls: prod ? prod.calls : 0, missed: 0, note,
     leader: leader || undefined, hireDate: hireDate || undefined, job: job || undefined,
     level: LEVEL_BY_JOB[job] || "New Hire", sims, live: true,
   };

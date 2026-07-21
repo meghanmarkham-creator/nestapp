@@ -149,7 +149,9 @@ export const FullReportCard = ({ advId, onBack, onNav, onOpenAdvocate, search, o
 
   const metrics: { label: string; value: string; unit: string; color: string; pending?: boolean }[] = [
     { label: "Average Roleplay MOM", value: _pf1(a.roleplayMom), unit: "/ 5", color: momColor(a.roleplayMom) },
-    { label: "Average Production MOM", value: PENDING_LABELS.production, unit: "", color: "var(--text-weak)", pending: true },
+    a.productionMom == null
+      ? { label: "Average Production MOM", value: PENDING_LABELS.production, unit: "", color: "var(--text-weak)", pending: true }
+      : { label: "Average Production MOM", value: _pf1(a.productionMom), unit: "/ 5", color: momColor(a.productionMom) },
     { label: "Overall Assessment", value: PENDING_LABELS.assessment, unit: "", color: "var(--text-weak)", pending: true },
     { label: "Attendance", value: "—", unit: "", color: "var(--text-weak)", pending: true },
   ];

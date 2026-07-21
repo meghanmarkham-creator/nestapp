@@ -198,7 +198,7 @@ export const Dashboard = ({ onOpenPlan, onOpenClass, onOpenAdvocate, onNav, sear
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 11, marginTop: 2 }}>
-                <MomBar label="Production" pending={PENDING_LABELS.production} />
+                <MomBar label="Production" value={prodAvg(c) ?? undefined} pending={prodAvg(c) == null ? PENDING_LABELS.production : undefined} />
                 <MomBar label="AI Roleplay" value={momAvg(c, "roleplayMom")} />
                 <MomBar label="AI Assessments" pending={PENDING_LABELS.assessment} />
               </div>
@@ -313,6 +313,11 @@ const HeroChip = ({ k, v, def, dot }: { k: string; v: number; def: string; dot: 
 
 const momAvg = (c: { advocates: Advocate[] }, key: "roleplayMom") =>
   c.advocates.reduce((s, a) => s + a[key], 0) / c.advocates.length;
+// class-level production average over advocates that have production data (null if none)
+const prodAvg = (c: { advocates: Advocate[] }): number | null => {
+  const vals = c.advocates.map((a) => a.productionMom).filter((v): v is number => v != null);
+  return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
+};
 
 const MomBar = ({ label, value, pending }: { label: string; value?: number | null; pending?: string }) => {
   if (pending != null || value == null || Number.isNaN(value)) {
@@ -347,7 +352,7 @@ const RosterCard = ({ a, onOpen, onPlan }: { a: Advocate; onOpen: () => void; on
       <GradePill letter={a.grade} size={34} />
     </div>
     <MomBar label="AI Roleplay" value={a.roleplayMom} />
-    <MomBar label="Production" pending={PENDING_LABELS.production} />
+    <MomBar label="Production" value={a.productionMom ?? undefined} pending={a.productionMom == null ? PENDING_LABELS.production : undefined} />
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
       <MiniStat tone="up" label="Strength" value={a.strength.label} score={`${f1(a.strength.val)}/5`} />
       <MiniStat tone="down" label="Focus" value={a.opportunity.label} score={`${f1(a.opportunity.val)}/5`} />

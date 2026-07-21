@@ -71,7 +71,9 @@ export const AdvocatesView = ({ onNav, onOpenAdvocate, onOpenPlan, search, onSea
                     <td style={tdA2}><LevelTag level={a.level ?? "—"} /></td>
                     <td style={{ ...tdA2, textAlign: "center" }}><div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><GradePill letter={a.grade} size={26} /><span style={{ font: "var(--body-strong-sm)", color: "var(--text-strong)" }}>{a.composite}</span></div></td>
                     <td style={{ ...tdA2, textAlign: "center" }}><span style={{ font: "var(--body-strong-sm)", color: momColor(a.roleplayMom) }}>{_af1(a.roleplayMom)}</span></td>
-                    <td style={{ ...tdA2, textAlign: "center" }}><span style={{ font: "var(--body-regular-sm)", color: "var(--text-weak)" }}>{PENDING_LABELS.production}</span></td>
+                    <td style={{ ...tdA2, textAlign: "center" }}>{a.productionMom == null
+                      ? <span style={{ font: "var(--body-regular-sm)", color: "var(--text-weak)" }}>{PENDING_LABELS.production}</span>
+                      : <span style={{ font: "var(--body-strong-sm)", color: momColor(a.productionMom) }}>{_af1(a.productionMom)}</span>}</td>
                     <td style={tdA2}><span style={{ font: "var(--body-regular-sm)", color: "var(--text-default)" }}>{a.opportunity.label}</span></td>
                     <td style={{ ...tdA2, textAlign: "right", whiteSpace: "nowrap" }}>
                       {a.composite < READINESS_THRESHOLD && <button style={aPlanBtn} onClick={(e) => { e.stopPropagation(); onOpenPlan(a.id); }}><NIcon.coaching s={14} /> Plan</button>}
@@ -104,7 +106,7 @@ export const AdvocateDetail = ({ advId, onNav, onBack, onOpenPlan, onOpenClass }
   const g = GRADES[a.grade];
   const components: { label: string; val: number | null; weight: number; mom?: number; pending?: string }[] = [
     { label: "Roleplay MOM", val: a.roleplay, weight: 30, mom: a.roleplayMom },
-    { label: "Production MOM", val: a.production, weight: 30, pending: PENDING_LABELS.production },
+    { label: "Production MOM", val: a.production, weight: 30, mom: a.productionMom ?? undefined, pending: PENDING_LABELS.production },
     { label: "Assessment", val: a.assessment, weight: 25, pending: PENDING_LABELS.assessment },
     { label: "Attendance", val: a.attendance, weight: 15, pending: "—" },
   ];

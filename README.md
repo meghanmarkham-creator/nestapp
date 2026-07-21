@@ -82,8 +82,14 @@ against the real columns and validated live:
   **buckets** (`POOR` / `AVERAGE` / `GREAT`), not raw 1–5, so the query maps them to
   numeric midpoints (POOR = 1.5, AVERAGE = 3, GREAT = 4.5) and averages per advocate.
   `roleplayMom` = mean of the three criteria averages.
-- **Not in this view** (roleplay-simulation data only): Production MOM, Assessment, and
-  Attendance — these keep placeholder values with `TODO`s until their sources are wired.
+**Production MOM** is now also wired, from `CUSTOMERCARE.PUBLIC.VW_MOM_STANDARD_INSIGHTS`
+⋈ `VW_ASPECT_ADVOCATE_MAP` (STAFF_GROUP `CX_M1_TRAINING`), matched to advocates by
+employee id / email and aggregated per advocate (same bucket→1–5 conversion). Cached in
+`lib/production-snapshot.json`. Advocates with no production calls yet show "Coming Soon".
+
+Readiness is provisional: **roleplay + production averaged** where both exist (roleplay
+only otherwise). **Assessment** and **Attendance** are still not sourced ("Not Yet
+Calculated" / "—") and are excluded from the composite until wired.
 
 > If leadership needs the true 1–5 (not the three buckets), ask the view owner to also
 > expose `INSIGHT_DETAILS:*:CRITERION_SCORE::INT`; then drop the `DECODE` mapping in
