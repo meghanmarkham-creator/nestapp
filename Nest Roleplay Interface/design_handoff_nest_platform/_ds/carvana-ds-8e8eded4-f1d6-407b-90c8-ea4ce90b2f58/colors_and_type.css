@@ -1,0 +1,58 @@
+/* colors_and_type.css — thin convenience sheet for quick prototyping.
+ * For the canonical, full-fidelity tokens, use styles/tokens.css instead.
+ * This file re-exports the most-used vars under short aliases and defines
+ * a handful of `.h1` / `.h2` / `.body` / etc. utility classes. */
+
+@import url("./styles/tokens.css");
+
+[data-theme="carvana"],
+:root {
+  /* Short aliases — fg / bg hierarchy */
+  --fg1: var(--text-strong);        /* headlines, strongest text */
+  --fg2: var(--text-default);       /* body copy */
+  --fg3: var(--text-weak);          /* secondary / supporting */
+  --fg-inverse: var(--text-inverse);
+  --fg-link: var(--text-primary);
+
+  --bg1: var(--canvas-default);     /* page / paper */
+  --bg2: var(--canvas-muted);       /* secondary canvas */
+  --bg-card: var(--background-default);
+  --bg-weak: var(--background-weak);
+  --bg-primary: var(--background-primary);
+  --bg-strong: var(--background-strong);
+
+  --border-1: var(--border-subtle);
+  --border-2: var(--border-default);
+
+  /* Brand anchors — the two defining Carvana blues + yellow */
+  --cvna-blue: var(--reference-blue-400);   /* #228be6 — hero / brand-primary */
+  --cvna-navy: var(--reference-blue-700);   /* #0d375e — header / logo */
+  --cvna-yellow: var(--reference-yellow-400);/* #fab005 — decorative accent */
+
+  /* Font family shortcuts */
+  --font-ui: "Inter", system-ui, -apple-system, Segoe UI, sans-serif;
+  --font-display: "Brandon for Carvana", "Barlow Condensed", sans-serif;
+}
+
+/* Semantic utility classes */
+.h1 { font: var(--heading-4xl); color: var(--fg1); letter-spacing: -0.02em; }
+.h2 { font: var(--heading-3xl); color: var(--fg1); letter-spacing: -0.02em; }
+.h3 { font: var(--heading-2xl); color: var(--fg1); }
+.h4 { font: var(--heading-xl); color: var(--fg1); }
+.h5 { font: var(--heading-lg); color: var(--fg1); }
+.h6 { font: var(--heading-md); color: var(--fg1); }
+
+.display-xl { font: var(--brand-xl); letter-spacing: -0.02em; text-transform: uppercase; }
+.display-lg { font: var(--brand-lg); letter-spacing: -0.02em; text-transform: uppercase; }
+.display-md { font: var(--brand-md); letter-spacing: -0.02em; text-transform: uppercase; }
+
+.body-lg { font: var(--body-regular-lg); color: var(--fg2); }
+.body    { font: var(--body-regular-md); color: var(--fg2); }
+.body-sm { font: var(--body-regular-sm); color: var(--fg2); }
+
+.label-lg { font: var(--label-lg); color: var(--fg1); }
+.label    { font: var(--label-md); color: var(--fg1); }
+.label-sm { font: var(--label-sm); color: var(--fg1); }
+
+.link     { font: var(--body-link-md); color: var(--fg-link); text-decoration: underline; }
+.link:hover { color: var(--text-primary-hover); }

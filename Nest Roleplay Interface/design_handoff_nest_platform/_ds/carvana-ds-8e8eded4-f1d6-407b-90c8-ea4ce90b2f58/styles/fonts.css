@@ -1,0 +1,81 @@
+/* Carvana typography fonts.
+ * Primary UI/body: Inter — loaded locally from fonts/Inter-*.woff2.
+ *   (Carvana production serves the same files from
+ *   https://assets.fastly.carvana.io/fonts/Inter-*.woff2.)
+ * Brand display: "Brandon for Carvana" — proprietary, 900 Black only. Loaded
+ *   from fonts/BrandonforCarvana-Black.woff2. Never use Brandon at any other
+ *   weight; there is no fallback face.                                          */
+
+/* Inter — full weight range (100–900), local woff2. */
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/Inter-100.woff2") format("woff2");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/Inter-200.woff2") format("woff2");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/Inter-300.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/Inter-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/Inter-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/Inter-600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/Inter-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/Inter-800.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/Inter-900.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Brandon for Carvana — 900 Black ONLY. No other weights exist; do not fall back. */
+@font-face {
+  font-family: "Brandon for Carvana";
+  src: url("../fonts/BrandonforCarvana-Black.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}

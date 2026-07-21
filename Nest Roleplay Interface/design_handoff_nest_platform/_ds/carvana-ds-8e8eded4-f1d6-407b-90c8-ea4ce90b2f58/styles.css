@@ -1,0 +1,7 @@
+/* Carvana Design System — single global stylesheet entry.
+ * Consumers link THIS one file; it pulls in fonts, reference primitives,
+ * the semantic light/dark themes, typography tokens, and the atomic
+ * convenience classes.
+ */
+@import url("./styles/tokens.css");
+@import url("./colors_and_type.css");

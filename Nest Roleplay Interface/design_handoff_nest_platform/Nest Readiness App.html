@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Nest — Readiness</title>
+<link rel="stylesheet" href="_ds/carvana-ds-8e8eded4-f1d6-407b-90c8-ea4ce90b2f58/styles.css">
+<link rel="stylesheet" href="styles/tokens.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds/carvana-ds-8e8eded4-f1d6-407b-90c8-ea4ce90b2f58/_ds_bundle.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { font-family: Inter, sans-serif; background: var(--canvas-muted); }
+  button { font-family: inherit; }
+  input { font-family: inherit; }
+  @keyframes cdFade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes cdSlide { from { transform: translateX(40px); opacity: .4; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes cdSpin { to { transform: rotate(360deg); } }
+  ::-webkit-scrollbar { width: 11px; height: 11px; }
+  ::-webkit-scrollbar-thumb { background: var(--reference-slate-200); border-radius: 999px; border: 3px solid var(--canvas-muted); }
+
+  .nest-nav-item:hover { background: rgba(255,255,255,.07) !important; }
+  .nest-row:hover { background: var(--canvas-muted); }
+
+  /* responsive dashboard grids */
+  .nest-hero { display: grid; grid-template-columns: auto 1fr auto; }
+  .nest-cards { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .nest-lower { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(0,1fr); }
+  @media (max-width: 1180px) {
+    .nest-cards { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 1080px) {
+    .nest-hero { grid-template-columns: 1fr; justify-items: start; }
+    .nest-hero > div:nth-child(3) { border-left: none !important; padding-left: 0 !important; flex-direction: row !important; gap: 36px !important; width: auto !important; }
+    .nest-lower { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 720px) {
+    .nest-cards { grid-template-columns: 1fr; }
+    .nest-hero > div:nth-child(3) { flex-direction: column !important; gap: 14px !important; }
+  }
+
+  @media print {
+    aside, header, .no-print { display: none !important; }
+    main { padding: 0 !important; }
+    body { background: #fff; }
+  }
+</style>
+</head>
+<body data-theme="carvana">
+<div id="root"></div>
+
+<script type="text/babel" src="app/data.jsx"></script>
+<script type="text/babel" src="app/data_ext.jsx"></script>
+<script type="text/babel" src="app/charts.jsx"></script>
+<script type="text/babel" src="app/ui.jsx"></script>
+<script type="text/babel" src="app/store.jsx"></script>
+<script type="text/babel" src="app/shell.jsx"></script>
+<script type="text/babel" src="app/email_report.jsx"></script>
+<script type="text/babel" src="app/dashboard.jsx"></script>
+<script type="text/babel" src="app/classes.jsx"></script>
+<script type="text/babel" src="app/advocates.jsx"></script>
+<script type="text/babel" src="app/ai_efficiency.jsx"></script>
+<script type="text/babel" src="app/assignments.jsx"></script>
+<script type="text/babel" src="app/trainers.jsx"></script>
+<script type="text/babel" src="app/coaching_view.jsx"></script>
+<script type="text/babel" src="app/reportcards.jsx"></script>
+<script type="text/babel" src="app/coaching.jsx"></script>
+
+<script type="text/babel">
+function App() {
+  const [stack, setStack] = React.useState([{ view: "dash" }]);
+  const [planId, setPlanId] = React.useState(null);
+  const [search, setSearch] = React.useState("");
+  const cur = stack[stack.length - 1];
+
+  const nav = (key) => { setStack([{ view: key }]); window.scrollTo(0, 0); };
+  const push = (r) => { setStack(s => [...s, r]); window.scrollTo(0, 0); };
+  const back = () => setStack(s => s.length > 1 ? s.slice(0, -1) : s);
+
+  const openClass = (id) => push({ view: "classDetail", classId: id });
+  const openAdvocate = (id) => push({ view: "advocateDetail", advId: id });
+  const openPlan = (id) => setPlanId(id);
+  const graduate = (classId) => push({ view: "report", classId });
+
+  const onSearch = (v) => {
+    setSearch(v);
+    if (v && cur.view !== "advocate") setStack([{ view: "advocate" }]);
+  };
+
+  const common = { onNav: nav, onOpenPlan: openPlan, onOpenClass: openClass, onOpenAdvocate: openAdvocate, search, onSearch };
+
+  let screen;
+  switch (cur.view) {
+    case "aieff":          screen = <AIEfficiencyView {...common} />; break;
+    case "assign":         screen = <ClassAssignmentsView onNav={nav} search={search} onSearch={onSearch} />; break;
+    case "trainers":       screen = <TrainersView {...common} />; break;
+    case "classes":        screen = <ClassesView {...common} />; break;
+    case "classDetail":    screen = <ClassDetail classId={cur.classId} onNav={nav} onBack={back} onOpenPlan={openPlan} onOpenAdvocate={openAdvocate} onGraduate={graduate} />; break;
+    case "advocate":       screen = <AdvocatesView {...common} />; break;
+    case "advocateDetail": screen = <AdvocateDetail advId={cur.advId} onNav={nav} onBack={back} onOpenPlan={openPlan} onOpenClass={openClass} />; break;
+    case "coaching":       screen = <CoachingBoard {...common} />; break;
+    case "report":         screen = <ReportCardsView onNav={nav} onOpenAdvocate={openAdvocate} search={search} onSearch={onSearch} />; break;
+    case "archive":        screen = <ArchiveView onNav={nav} search={search} onSearch={onSearch} />; break;
+    default:               screen = <Dashboard {...common} />;
+  }
+
+  return (
+    <>
+      {screen}
+      <CoachingDrawer advId={planId} onClose={() => setPlanId(null)} />
+      <ToastHost />
+    </>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
