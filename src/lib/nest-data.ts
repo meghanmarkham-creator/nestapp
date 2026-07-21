@@ -313,10 +313,14 @@ const REAL_TRAINERS: Trainer[] = (trainerSnapshot.rows as TrainerRow[]).map((r) 
   return { id: `t-${id}`, name, short: shortName(name), email, tenure: tenureStr(tenureMonths), home: LOCATION_NAME[location] || location };
 });
 
+// Leadership (from the roster reporting chain): Shantelle Garner (Team Lead; Workday
+// preferred name "Shantelle Rammell") manages all the trainers and reports to Shelby
+// Gary (Manager), who is over the whole program. Both occasionally coach; Release
+// reviews auto-assign to Shelby Gary (top of the chain).
 export const TRAINERS: Trainer[] = [
   ...REAL_TRAINERS,
-  { id: "t-gary", name: "Shelby Gary", short: "S. Gary", email: "shelby.gary@carvana.com", tenure: "7 yrs", home: "Tempe, AZ", role: "Team Lead" },
-  { id: "t-garner", name: "Shantelle Garner", short: "S. Garner", email: "shantelle.garner@carvana.com", tenure: "8 yrs", home: "Tempe, AZ", role: "Team Lead" },
+  { id: "t-garner", name: "Shantelle Garner", short: "S. Garner", email: "shantelle.garner@carvana.com", tenure: "2.8 yrs", home: "Tempe, AZ", role: "Team Lead" },
+  { id: "t-gary", name: "Shelby Gary", short: "S. Gary", email: "shelby.gary@carvana.com", tenure: "5.4 yrs", home: "Tempe, AZ", role: "Manager" },
 ];
 const trainerByShortMap: Record<string, Trainer> = {};
 TRAINERS.forEach((t) => (trainerByShortMap[t.short] = t));
