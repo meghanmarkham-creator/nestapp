@@ -35,6 +35,8 @@ export const Dashboard = ({ onOpenPlan, onOpenClass, onOpenAdvocate, onNav, sear
   const [cohort, setCohort] = useState("all");
   const [level, setLevel] = useState("all");
   const [emailOpen, setEmailOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"class" | "advocate">("class");
+  const [advSearch, setAdvSearch] = useState("");
 
   const reassignedSet = new Set(Object.keys(S.assignments || {}));
 
@@ -76,10 +78,14 @@ export const Dashboard = ({ onOpenPlan, onOpenClass, onOpenAdvocate, onNav, sear
     .filter((c) => (cohort === "all" || c.id === cohort) && (level === "all" || c.level === level))
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 
-  // roster (pool) advocates when there are no classes
+  // roster (pool) advocates — shown when no classes, when "By advocate" is toggled,
+  // or when the advocate search is active.
   const poolAdvs = allAdvocates
     .filter((a) => level === "all" || a.level === level)
     .sort((a, b) => b.composite - a.composite);
+  const advQuery = advSearch.trim().toLowerCase();
+  const advMode = noClasses || viewMode === "advocate" || advQuery !== "";
+  const rosterAdvs = poolAdvs.filter((a) => !advQuery || a.name.toLowerCase().includes(advQuery));
 
   const scopeAdvs = (noClasses
     ? poolAdvs
@@ -140,23 +146,45 @@ export const Dashboard = ({ onOpenPlan, onOpenClass, onOpenAdvocate, onNav, sear
       {/* Active classes */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div>
-          <h2 style={{ font: "var(--heading-sm)", color: "var(--text-strong)", margin: 0 }}>{noClasses ? "Advocate pool" : "Active classes"}</h2>
+          <h2 style={{ font: "var(--heading-sm)", color: "var(--text-strong)", margin: 0 }}>{advMode ? "Advocates" : "Active classes"}</h2>
           <div style={{ font: "var(--body-regular-sm)", color: "var(--text-weak)", marginTop: 2 }}>
-            {noClasses
-              ? `${poolAdvs.length} advocates · no classes yet — build cohorts on Class Assignments`
+            {advMode
+              ? `${rosterAdvs.length} ${rosterAdvs.length === 1 ? "advocate" : "advocates"}${noClasses ? " · no classes yet — build cohorts on Class Assignments" : ""}`
               : `${shown.length} of ${allClasses.length} classes shown`}
           </div>
         </div>
-        {!noClasses && <Dropdown value={cohort} onChange={setCohort} options={classOpts} width={236} align="right" icon={<NIcon.calendar s={16} />} />}
+        {!advMode && <Dropdown value={cohort} onChange={setCohort} options={classOpts} width={236} align="right" icon={<NIcon.calendar s={16} />} />}
       </div>
-      <Segmented value={level} onChange={setLevel} options={levelOpts} />
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <Segmented value={level} onChange={setLevel} options={levelOpts} />
+        <div style={{ flex: 1 }} />
+        {/* By class / By advocate toggle (only meaningful once classes exist) */}
+        {!noClasses && (
+          <Segmented
+            value={viewMode}
+            onChange={(v) => setViewMode(v as "class" | "advocate")}
+            options={[{ value: "class", label: "By class" }, { value: "advocate", label: "By advocate" }]}
+          />
+        )}
+        {/* advocate name search */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, height: 40, padding: "0 14px", borderRadius: 999, border: `1px solid ${advQuery ? "var(--brand-primary)" : "var(--border-default)"}`, background: "var(--canvas-default)", color: "var(--text-weak)", width: 260 }}>
+          <NIcon.search s={18} />
+          <input
+            value={advSearch}
+            onChange={(e) => setAdvSearch(e.target.value)}
+            placeholder="Search advocates by name…"
+            style={{ border: "none", outline: "none", background: "transparent", font: "var(--body-regular-sm)", color: "var(--text-strong)", width: "100%" }}
+          />
+          {advSearch && <span onClick={() => setAdvSearch("")} style={{ display: "inline-flex", cursor: "pointer" }}><NIcon.x s={15} /></span>}
+        </div>
+      </div>
 
-      {noClasses ? (
+      {advMode ? (
         <div className="nest-cards" style={{ gap: 16 }}>
-          {poolAdvs.map((a) => (
+          {rosterAdvs.map((a) => (
             <RosterCard key={a.id} a={a} onOpen={() => onOpenAdvocate(a.id)} onPlan={() => onOpenPlan(a.id)} />
           ))}
-          {poolAdvs.length === 0 && <EmptyState title="No advocates match this level" sub="Try a different level." />}
+          {rosterAdvs.length === 0 && <EmptyState title="No advocates found" sub={advQuery ? "No advocate matches that name." : "Try a different level."} />}
         </div>
       ) : (
       <div className="nest-cards" style={{ gap: 20 }}>
@@ -217,11 +245,7 @@ export const Dashboard = ({ onOpenPlan, onOpenClass, onOpenAdvocate, onNav, sear
 
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: "1px solid var(--border-subtle)", paddingTop: 14, marginTop: 2 }}>
                 <span style={{ font: "var(--body-regular-xs)", color: "var(--text-weak)" }}>Trainer: {c.lead}</span>
-                {c.isCustom ? (
-                  <a onClick={() => onNav && onNav("assign")} style={dbLinkArrow}>Manage <span style={{ display: "inline-flex" }}><NIcon.chevRight s={14} /></span></a>
-                ) : (
-                  <a onClick={() => onOpenClass && onOpenClass(c.id)} style={dbLinkArrow}>View class <span style={{ display: "inline-flex" }}><NIcon.chevRight s={14} /></span></a>
-                )}
+                <a onClick={() => onOpenClass && onOpenClass(c.id)} style={dbLinkArrow}>View class <span style={{ display: "inline-flex" }}><NIcon.chevRight s={14} /></span></a>
               </div>
             </article>
           ),

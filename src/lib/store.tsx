@@ -207,8 +207,14 @@ export type NestStore = typeof Store;
 export function useStore(): NestStore {
   const [, force] = useReducer((x: number) => x + 1, 0);
   useEffect(() => {
+    // Load persisted state, subscribe, then force one render so this component
+    // reflects state that may have been hydrated before it subscribed. (Without
+    // the trailing force(), a component that mounts after hydrate() emits would
+    // keep showing the pre-hydration snapshot — e.g. created classes not appearing.)
     Store.hydrate();
-    return Store.subscribe(force);
+    const unsub = Store.subscribe(force);
+    force();
+    return unsub;
   }, []);
   return Store;
 }

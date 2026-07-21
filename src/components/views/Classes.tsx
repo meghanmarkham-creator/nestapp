@@ -5,14 +5,16 @@
 
 import { useState } from "react";
 import {
-  CATEGORIES, LEVELS, READINESS_THRESHOLD, cohortById, cohortGroups, cohorts,
+  CATEGORIES, LEVELS, READINESS_THRESHOLD, cohortById, cohortGroups, cohorts, trainerById,
 } from "@/lib/nest-data";
+import { deriveStats, resolveAdv } from "@/lib/derive";
+import { useStore, type StoreState } from "@/lib/store";
 import { NestShell, Panel } from "@/components/shell";
 import { NIcon } from "@/components/icons";
 import { Dropdown, Segmented, Avatar, LevelTag, StatusBadge, EmptyState } from "@/components/ui";
 import { GradePill, DistBar, Sparkline, CatBars, momColor } from "@/components/charts";
 import { PENDING_LABELS } from "@/lib/momScale";
-import type { Advocate } from "@/lib/types";
+import type { Advocate, CatMap } from "@/lib/types";
 
 const _f1 = (v: number) => Number(v).toFixed(1);
 
@@ -90,10 +92,39 @@ interface ClassDetailProps {
   onGraduate: (id: string) => void;
 }
 
+interface DetailClass {
+  id: string; name: string; level: string; cohortLabel: string; lead: string; status: string;
+  size: number; advocates: Advocate[]; cats: CatMap; trend: number[] | null;
+  avg: number; grade: { letter: "A" | "B" | "C" | "D"; fill: string }; dist: Record<string, number>;
+}
+
+/** Resolve a class id to a normalized detail shape — base cohort or user-created custom class. */
+function resolveClass(classId: string, S: StoreState): DetailClass | null {
+  const base = cohortById(classId);
+  if (base) return { ...base, trend: base.trend } as unknown as DetailClass;
+  const cc = S.customClasses.find((x) => x.id === classId);
+  if (!cc) return null;
+  const advs = cc.advocateIds
+    .map((id) => resolveAdv(id, S))
+    .filter((a): a is Advocate => !!a && typeof (a as Advocate).composite === "number");
+  const ds = deriveStats(advs);
+  const cats = {} as CatMap;
+  CATEGORIES.forEach((cat) => {
+    cats[cat.key] = advs.length ? advs.reduce((s, a) => s + a.cats[cat.key], 0) / advs.length : 0;
+  });
+  return {
+    id: cc.id, name: cc.name, level: cc.level, cohortLabel: cc.startLabel,
+    lead: cc.trainerId ? trainerById(cc.trainerId)?.short || "—" : "Unassigned",
+    status: "In training", size: advs.length, advocates: advs, cats, trend: null,
+    avg: ds.avg, grade: ds.grade, dist: ds.dist,
+  };
+}
+
 // ---- Class drill-down ----
 export const ClassDetail = ({ classId, onNav, onBack, onOpenPlan, onOpenAdvocate, onGraduate }: ClassDetailProps) => {
-  const c = cohortById(classId);
+  const store = useStore();
   const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" }>({ key: "composite", dir: "desc" });
+  const c = resolveClass(classId, store.get());
   if (!c) return (
     <NestShell active="classes" title="Class" onNav={onNav}>
       <BackBar onBack={onBack} label="All classes" />
@@ -125,9 +156,9 @@ export const ClassDetail = ({ classId, onNav, onBack, onOpenPlan, onOpenAdvocate
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16 }}>
         <SummaryTile label="Class readiness" value={c.avg} sub={`/ 100 · ${c.grade.letter}`} accent={c.grade.fill} />
         <SummaryTile label="Advocates" value={c.size} sub={`${c.dist.D} at risk`} accent="var(--brand-primary)" />
-        <SummaryTile label="Avg roleplay MOM" value={_f1(avgOf(c.advocates, "roleplayMom"))} sub="/ 5" accent="var(--reference-blue-500)" />
-        <SummaryTile label="Avg production MOM" value={_f1(avgOf(c.advocates, "productionMom"))} sub="/ 5" accent="var(--reference-indigo-500)" />
-        <SummaryTile label="Avg attendance" value={`${Math.round(avgOf(c.advocates, "attendance"))}%`} accent="var(--reference-green-500)" />
+        {(() => { const v = avgN(c.advocates, "roleplayMom"); return <SummaryTile label="Avg roleplay MOM" value={v == null ? "—" : _f1(v)} sub={v == null ? "" : "/ 5"} accent="var(--reference-blue-500)" />; })()}
+        {(() => { const v = avgN(c.advocates, "productionMom"); return <SummaryTile label="Avg production MOM" value={v == null ? "Coming Soon" : _f1(v)} sub={v == null ? "" : "/ 5"} accent="var(--reference-indigo-500)" />; })()}
+        {(() => { const v = avgN(c.advocates, "attendance"); return <SummaryTile label="Avg attendance" value={v == null ? "—" : `${Math.round(v)}%`} accent="var(--reference-green-500)" />; })()}
       </div>
 
       <div className="nest-lower" style={{ gap: 24, alignItems: "start" }}>
@@ -180,8 +211,10 @@ export const ClassDetail = ({ classId, onNav, onBack, onOpenPlan, onOpenAdvocate
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           <Panel title="Grade mix">
             <DistBar dist={c.dist} total={c.size} showCounts height={12} />
-            <Sparkline data={c.trend} width={220} height={44} color={c.grade.fill} />
-            <div style={{ font: "var(--body-regular-xs)", color: "var(--text-weak)" }}>6-week readiness trend</div>
+            {c.trend && <>
+              <Sparkline data={c.trend} width={220} height={44} color={c.grade.fill} />
+              <div style={{ font: "var(--body-regular-xs)", color: "var(--text-weak)" }}>6-week readiness trend</div>
+            </>}
           </Panel>
           <Panel title="MOM rubric — class average" subtitle="1–5 across coaching criteria">
             <CatBars cats={CATEGORIES.map((cat) => ({ ...cat, val: c.cats[cat.key] }))} max={5} labelCol={150} />
@@ -192,7 +225,11 @@ export const ClassDetail = ({ classId, onNav, onBack, onOpenPlan, onOpenAdvocate
   );
 };
 
-const avgOf = (arr: Advocate[], key: string) => arr.reduce((s, a) => s + (a as any)[key], 0) / arr.length;
+// null-safe average over a numeric advocate field (skips nulls; null if none)
+const avgN = (arr: Advocate[], key: string): number | null => {
+  const vals = arr.map((a) => (a as any)[key]).filter((v): v is number => typeof v === "number");
+  return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
+};
 
 const MomCell = ({ v }: { v: number | null }) => (
   <td style={{ padding: "12px 16px", textAlign: "center" }}>
