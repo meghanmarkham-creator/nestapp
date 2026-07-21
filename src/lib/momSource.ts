@@ -3,7 +3,7 @@ import "server-only";
 // ---------------------------------------------------------------------------
 // The Nest — MOM data source (server-only).
 //
-// Real MOM roleplay/production scores come from the Snowflake view:
+// Real MOM roleplay scores come from the Snowflake view:
 //     CUSTOMERCARE.MOM_STANDARD.VW_CX_NEST_SIMULATION_INSIGHTS
 //
 // This module is the single seam between the app and live data. It returns a
@@ -12,25 +12,43 @@ import "server-only";
 //
 // When NEST_DATA_SOURCE=snowflake and credentials are configured, it queries
 // Snowflake live. Otherwise it returns deterministic mock rows so the demo runs
-// with no backend (per the README: "run the query once and cache ... then
-// switch to live").
+// with no backend (per the README).
 //
-// NOTE: the exact column names below are placeholders mapped to the documented
-// query shape. Confirm them against the live view (DESCRIBE VIEW ...) and adjust
-// the SELECT + row mapping — everything downstream keys off the MomRow shape.
+// ── Confirmed against the live view (DESCRIBE VIEW, 2026-07) ────────────────
+//   Grain:   one row per simulation call (TRANSCRIPTION_ID); ~251 calls / 97
+//            advocates. We GROUP BY EMPLOYEE_ID to get one MomRow per advocate.
+//   Identity: EMPLOYEE_ID, PREFERRED_NAME, EMAIL_ADDRESS, LEADER, STAFF_GROUP.
+//   Criteria: COMPREHENSION_SCORE, CLARITY_OF_NEXT_STEPS_SCORE,
+//            CUSTOMER_FELT_HEARD_SCORE — each its own column, but exposed as
+//            TEXT BUCKETS ('POOR' | 'AVERAGE' | 'GREAT'), not the raw 1–5.
+//            We map buckets → numeric midpoints (POOR=1.5, AVERAGE=3, GREAT=4.5)
+//            to reach the app's 1–5 MOM scale, then average per advocate.
+//            (TODO: if leadership wants the true 1–5, ask the view owner to also
+//            expose INSIGHT_DETAILS:*:CRITERION_SCORE::INT, then drop the DECODE.)
+//   roleplayMom = mean of the three criteria averages.
+//
+// This view is ROLEPLAY-SIMULATION data only. It does NOT provide Production MOM,
+// Assessment, or Attendance — those keep the prototype's placeholder values (see
+// mergeMomRows in nest integration) until their sources are wired.
+//   TODO: Production MOM source (live-call MOM), Assessment, Attendance.
 // ---------------------------------------------------------------------------
 
 import { allAdvocates } from "./nest-data";
 import type { CatKey } from "./types";
 
 export interface MomRow {
-  /** advocate identifier (maps to Advocate.id) */
+  /** advocate identifier — EMPLOYEE_ID (maps to Advocate.id) */
   id: string;
   name: string;
   email?: string;
-  roleplayMom: number; // 1–5
-  productionMom: number; // 1–5
-  /** optional MOM rubric sub-scores (1–5 each) */
+  /** classroom leader / team lead from the roster join (LEADER) */
+  leader?: string;
+  /** number of scored simulations this advocate has (COUNT of calls) */
+  sims?: number;
+  roleplayMom: number; // 1–5 (mean of the three criteria)
+  /** not provided by this view — undefined until a Production MOM source is wired */
+  productionMom?: number; // 1–5
+  /** MOM rubric sub-scores (1–5 each), averaged from the bucketed criteria */
   cats?: Partial<Record<CatKey, number>>;
 }
 
@@ -41,29 +59,40 @@ const VIEW_FQN = [
 ].join(".");
 
 /**
- * Documented server-side query. Column aliases map the view's columns to the
- * MomRow shape — rename the source columns to match your view.
- *
- * If the view returns per-call rows rather than per-advocate aggregates, wrap
- * this in an aggregation (AVG of the MOM scores GROUP BY advocate).
+ * Live per-advocate aggregation over the simulation-insights view.
+ * Buckets are mapped to 1–5 midpoints and averaged; roleplayMom is the mean of
+ * the three criteria averages. Validated against the live view.
  */
 export const MOM_QUERY = `
+  WITH m AS (
+    SELECT
+      EMPLOYEE_ID,
+      PREFERRED_NAME,
+      EMAIL_ADDRESS,
+      LEADER,
+      DECODE(COMPREHENSION_SCORE,          'POOR', 1.5, 'AVERAGE', 3, 'GREAT', 4.5) AS C,
+      DECODE(CLARITY_OF_NEXT_STEPS_SCORE,  'POOR', 1.5, 'AVERAGE', 3, 'GREAT', 4.5) AS CL,
+      DECODE(CUSTOMER_FELT_HEARD_SCORE,    'POOR', 1.5, 'AVERAGE', 3, 'GREAT', 4.5) AS H
+    FROM ${VIEW_FQN}
+  )
   SELECT
-    ADVOCATE_ID          AS ID,
-    ADVOCATE_NAME        AS NAME,
-    ADVOCATE_EMAIL       AS EMAIL,
-    ROLEPLAY_MOM         AS ROLEPLAYMOM,
-    PRODUCTION_MOM       AS PRODUCTIONMOM,
-    MOM_COMPREHENSION    AS COMPREHENSION,
-    MOM_CLARITY          AS CLARITY,
-    MOM_FELT_HEARD       AS HEARD
-  FROM ${VIEW_FQN}
+    EMPLOYEE_ID                         AS ID,
+    MAX(PREFERRED_NAME)                 AS NAME,
+    MAX(EMAIL_ADDRESS)                  AS EMAIL,
+    MAX(LEADER)                         AS LEADER,
+    COUNT(*)                            AS SIMS,
+    ROUND(AVG(C), 2)                    AS COMPREHENSION,
+    ROUND(AVG(CL), 2)                   AS CLARITY,
+    ROUND(AVG(H), 2)                    AS HEARD,
+    ROUND((AVG(C) + AVG(CL) + AVG(H)) / 3, 2) AS ROLEPLAYMOM
+  FROM m
+  WHERE EMPLOYEE_ID IS NOT NULL
+  GROUP BY EMPLOYEE_ID
 `;
 
 /** Live Snowflake fetch. Uses snowflake-sdk lazily so the app builds without it. */
 async function fetchFromSnowflake(): Promise<MomRow[]> {
   // TODO: `npm i snowflake-sdk` and provide SNOWFLAKE_* env vars to enable.
-  // Kept as a dynamic import so a missing dependency never breaks the build/demo.
   // Computed specifier keeps tsc/webpack from statically resolving an optional dep.
   const pkg = "snowflake-sdk";
   const sdk: any = await import(/* webpackIgnore: true */ pkg).catch(() => null);
@@ -92,18 +121,25 @@ async function fetchFromSnowflake(): Promise<MomRow[]> {
     });
   });
   connection.destroy(() => {});
-  return rows.map((r) => ({
+  return rows.map(normalizeRow);
+}
+
+/** Map a raw Snowflake result row to a MomRow. */
+function normalizeRow(r: any): MomRow {
+  return {
     id: String(r.ID),
     name: r.NAME,
     email: r.EMAIL || undefined,
+    leader: r.LEADER || undefined,
+    sims: r.SIMS != null ? Number(r.SIMS) : undefined,
     roleplayMom: Number(r.ROLEPLAYMOM),
-    productionMom: Number(r.PRODUCTIONMOM),
+    // productionMom intentionally omitted — not in this view (TODO: wire source).
     cats: {
       comprehension: r.COMPREHENSION != null ? Number(r.COMPREHENSION) : undefined,
       clarity: r.CLARITY != null ? Number(r.CLARITY) : undefined,
       heard: r.HEARD != null ? Number(r.HEARD) : undefined,
     },
-  }));
+  };
 }
 
 /** Deterministic mock rows derived from the shape contract in nest-data.ts. */

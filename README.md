@@ -59,7 +59,7 @@ src/
 
 ## Real MOM data (Snowflake)
 
-Real MOM roleplay/production scores come from the Snowflake view
+Real roleplay MOM scores come from the Snowflake view
 `CUSTOMERCARE.MOM_STANDARD.VW_CX_NEST_SIMULATION_INSIGHTS`. The integration seam is
 `src/lib/momSource.ts` (served at `GET /api/mom`):
 
@@ -67,11 +67,27 @@ Real MOM roleplay/production scores come from the Snowflake view
    `SNOWFLAKE_*` connection vars.
 2. `npm i snowflake-sdk` (kept out of default deps so the demo builds with no native
    modules). The SDK is imported lazily.
-3. Confirm the view's column names against `MOM_QUERY` in `momSource.ts` and adjust the
-   `SELECT`/row mapping if they differ.
 
 When `NEST_DATA_SOURCE` is unset (or a live fetch fails) the app falls back to the
 deterministic mock rows, so it never hard-fails.
+
+**Confirmed schema (DESCRIBE VIEW, 2026-07)** — `MOM_QUERY` in `momSource.ts` is written
+against the real columns and validated live:
+
+- **Grain:** one row per simulation call (`TRANSCRIPTION_ID`) — the query groups by
+  `EMPLOYEE_ID` to produce one row per advocate.
+- **Identity:** `EMPLOYEE_ID`, `PREFERRED_NAME`, `EMAIL_ADDRESS`, `LEADER`, `STAFF_GROUP`.
+- **Criteria (each its own column):** `COMPREHENSION_SCORE`,
+  `CLARITY_OF_NEXT_STEPS_SCORE`, `CUSTOMER_FELT_HEARD_SCORE`. These are exposed as text
+  **buckets** (`POOR` / `AVERAGE` / `GREAT`), not raw 1–5, so the query maps them to
+  numeric midpoints (POOR = 1.5, AVERAGE = 3, GREAT = 4.5) and averages per advocate.
+  `roleplayMom` = mean of the three criteria averages.
+- **Not in this view** (roleplay-simulation data only): Production MOM, Assessment, and
+  Attendance — these keep placeholder values with `TODO`s until their sources are wired.
+
+> If leadership needs the true 1–5 (not the three buckets), ask the view owner to also
+> expose `INSIGHT_DETAILS:*:CRITERION_SCORE::INT`; then drop the `DECODE` mapping in
+> `MOM_QUERY`.
 
 ## Scoring model (kept faithful to the prototype)
 
