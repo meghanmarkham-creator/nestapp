@@ -14,6 +14,7 @@
 // dragged into classes the user creates on the Class Assignments tab.
 
 import snapshot from "./mom-snapshot.json";
+import trainerSnapshot from "./trainer-snapshot.json";
 import { bucketAvg } from "./momScale";
 import type {
   Advocate,
@@ -161,8 +162,13 @@ function buildAdvocate(row: SnapRow): Advocate {
   };
 }
 
+// Employees who are "Training Specialist, Customer Care" are trainers/facilitators,
+// not students — exclude them from the advocate pool (they appear in the trainer rail).
+const TRAINER_EMP_IDS = new Set((trainerSnapshot.rows as unknown[][]).map((r) => String(r[0])));
+
 export const allAdvocates: Advocate[] = (snapshot.rows as SnapRow[])
   .map(buildAdvocate)
+  .filter((a) => !TRAINER_EMP_IDS.has(a.id))
   .sort((a, b) => a.name.localeCompare(b.name));
 
 // No pre-built classes — advocates are assigned into user-created classes.
@@ -289,18 +295,26 @@ export function makePlan(advId: string) {
 }
 
 // ---------------------------------------------------------------------------
-// Trainers roster (static). Team-lead coaches Shelby Gary / Shantelle Garner retained.
+// Trainers — real "Training Specialist, Customer Care" from the Workday roster,
+// draggable as the class coach/facilitator on Class Assignments.
+// The two team-lead coaches (Shelby Gary / Shantelle Garner) who occasionally
+// coach are retained for the coaching-log flow + Release auto-assignment.
 // ---------------------------------------------------------------------------
+type TrainerRow = [string, string, string, string, string, string, number];
+const shortName = (name: string) => {
+  const parts = name.split(" ");
+  return `${parts[0][0]}. ${parts[parts.length - 1]}`;
+};
+const LOCATION_NAME: Record<string, string> = { "HQ-5": "Tempe, AZ", "HQ-3": "Tempe, AZ" };
+const tenureStr = (months: number) => `${Math.max(0.1, Math.round((months / 12) * 10) / 10)} yrs`;
+
+const REAL_TRAINERS: Trainer[] = (trainerSnapshot.rows as TrainerRow[]).map((r) => {
+  const [id, name, email, , location, , tenureMonths] = r;
+  return { id: `t-${id}`, name, short: shortName(name), email, tenure: tenureStr(tenureMonths), home: LOCATION_NAME[location] || location };
+});
+
 export const TRAINERS: Trainer[] = [
-  { id: "t-calloway", name: "Rachel Calloway", short: "R. Calloway", email: "rachel.calloway@carvana.com", tenure: "3.5 yrs", home: "Tempe, AZ" },
-  { id: "t-okafor", name: "Marcus Okafor", short: "M. Okafor", email: "marcus.okafor@carvana.com", tenure: "2 yrs", home: "Phoenix, AZ" },
-  { id: "t-flynn", name: "Aisha Flynn", short: "A. Flynn", email: "aisha.flynn@carvana.com", tenure: "4 yrs", home: "Tempe, AZ" },
-  { id: "t-pruitt", name: "Jordan Pruitt", short: "J. Pruitt", email: "jordan.pruitt@carvana.com", tenure: "1.5 yrs", home: "Remote" },
-  { id: "t-beckett", name: "Sam Beckett", short: "S. Beckett", email: "sam.beckett@carvana.com", tenure: "5 yrs", home: "Atlanta, GA" },
-  { id: "t-marsh", name: "Dana Marsh", short: "D. Marsh", email: "dana.marsh@carvana.com", tenure: "2.5 yrs", home: "Remote" },
-  { id: "t-vance", name: "Tara Vance", short: "T. Vance", email: "tara.vance@carvana.com", tenure: "3 yrs", home: "Austin, TX" },
-  { id: "t-ortiz", name: "Luis Ortiz", short: "L. Ortiz", email: "luis.ortiz@carvana.com", tenure: "1 yr", home: "Phoenix, AZ" },
-  { id: "t-webb", name: "Kira Webb", short: "K. Webb", email: "kira.webb@carvana.com", tenure: "6 yrs", home: "Tempe, AZ" },
+  ...REAL_TRAINERS,
   { id: "t-gary", name: "Shelby Gary", short: "S. Gary", email: "shelby.gary@carvana.com", tenure: "7 yrs", home: "Tempe, AZ", role: "Team Lead" },
   { id: "t-garner", name: "Shantelle Garner", short: "S. Garner", email: "shantelle.garner@carvana.com", tenure: "8 yrs", home: "Tempe, AZ", role: "Team Lead" },
 ];

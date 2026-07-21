@@ -1,0 +1,28 @@
+{
+  "generatedAt": "2026-07-21",
+  "source": "CUSTOMERCARE.ADVOCATE.VW_HISTORICAL_ADVOCATE_ROLE_MAP (IS_MOST_RECENT, IS_CURRENTLY_EMPLOYED, JOB_PROFILE = 'Training Specialist, Customer Care')",
+  "note": "Real Nest trainers/facilitators. Draggable as class coach on Class Assignments. Refresh by re-running the query.",
+  "columns": ["id", "name", "email", "leader", "location", "hireDate", "tenureMonths"],
+  "rows": [
+    ["123798", "Alberto Chavarria", "alberto.chavarria@carvana.com", "Amber Kidwell", "HQ-5", "2025-05-19", 14],
+    ["101671", "Alexander Martinez", "alexander.martinez4@carvana.com", "Amber Kidwell", "HQ-5", "2024-03-04", 28],
+    ["107769", "Anah Hargrove", "anah.hargrove@carvana.com", "Shantelle Rammell", "HQ-5", "2024-07-08", 24],
+    ["33745", "Brisa Mejia", "brisa.mejia@carvana.com", "Amber Kidwell", "HQ-5", "2021-02-01", 65],
+    ["117099", "David Lynn", "david.lynn@carvana.com", "Amber Kidwell", "HQ-5", "2025-01-13", 18],
+    ["36982", "Elizabeth Rung", "elizabeth.rung@carvana.com", "Brittany Willig", "HQ-3", "2021-03-29", 64],
+    ["61358", "Eric Faust", "eric.faust@carvana.com", "Amber Kidwell", "HQ-5", "2022-01-10", 54],
+    ["112752", "John Davis", "john.davis2@carvana.com", "Shantelle Rammell", "HQ-5", "2024-10-07", 21],
+    ["107823", "Josiah Watkins", "josiah.watkins@carvana.com", "Amber Kidwell", "HQ-5", "2024-07-15", 24],
+    ["101753", "Kymberly Otts", "kymberly.otts@carvana.com", "Shantelle Rammell", "HQ-5", "2024-02-12", 29],
+    ["37255", "Lee Rhodes", "lee.rhodes@carvana.com", "Shantelle Rammell", "HQ-5", "2021-03-29", 64],
+    ["62696", "Maagen Mora", "maagen.mora@carvana.com", "Shantelle Rammell", "HQ-5", "2022-01-24", 54],
+    ["118213", "Madde Birch", "madeliene.birch@carvana.com", "Amber Kidwell", "HQ-5", "2025-02-17", 17],
+    ["116396", "Marquis Perkins", "marquis.perkins@carvana.com", "Amber Kidwell", "HQ-5", "2025-01-13", 18],
+    ["117481", "Noah Mapes", "noah.mapes@carvana.com", "Shantelle Rammell", "HQ-5", "2025-02-03", 17],
+    ["39392", "Racheal Davis", "racheal.davis@carvana.com", "Shantelle Rammell", "HQ-5", "2021-05-10", 62],
+    ["120276", "Ryan Patterson", "ryan.patterson@carvana.com", "Amber Kidwell", "HQ-5", "2025-03-03", 16],
+    ["100882", "Shahein Nadjafi", "shahein.nadjafi@carvana.com", "Amber Kidwell", "HQ-5", "2024-02-12", 29],
+    ["116504", "T'Ziaha Quint", "tziaha.quint@carvana.com", "Shantelle Rammell", "HQ-5", "2025-01-13", 18],
+    ["110870", "Will Gard", "william.gard@carvana.com", "Amber Kidwell", "HQ-5", "2024-09-09", 22]
+  ]
+}
