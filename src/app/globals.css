@@ -1,0 +1,41 @@
+/* Global app styles — ported from the prototype's inline <style> block.
+ * Carvana.DS tokens/fonts are loaded via the linked DS stylesheet in layout.tsx. */
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { font-family: Inter, sans-serif; background: var(--canvas-muted); }
+button { font-family: inherit; }
+input { font-family: inherit; }
+
+@keyframes cdFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cdSlide { from { transform: translateX(40px); opacity: .4; } to { transform: translateX(0); opacity: 1; } }
+@keyframes cdSpin { to { transform: rotate(360deg); } }
+
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-thumb { background: var(--reference-slate-200); border-radius: 999px; border: 3px solid var(--canvas-muted); }
+
+.nest-nav-item:hover { background: rgba(255,255,255,.07) !important; }
+.nest-row:hover { background: var(--canvas-muted); }
+
+/* responsive dashboard grids */
+.nest-hero { display: grid; grid-template-columns: auto 1fr auto; }
+.nest-cards { display: grid; grid-template-columns: repeat(3, 1fr); }
+.nest-lower { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(0,1fr); }
+@media (max-width: 1180px) {
+  .nest-cards { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 1080px) {
+  .nest-hero { grid-template-columns: 1fr; justify-items: start; }
+  .nest-hero > div:nth-child(3) { border-left: none !important; padding-left: 0 !important; flex-direction: row !important; gap: 36px !important; width: auto !important; }
+  .nest-lower { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .nest-cards { grid-template-columns: 1fr; }
+  .nest-hero > div:nth-child(3) { flex-direction: column !important; gap: 14px !important; }
+}
+
+@media print {
+  aside, header, .no-print { display: none !important; }
+  main { padding: 0 !important; }
+  body { background: #fff; }
+}

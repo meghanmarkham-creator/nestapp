@@ -1,0 +1,204 @@
+/**
+ * Do not edit directly, this file was auto-generated.
+ */
+
+:root {
+  --brand-xl: 900 4.5rem / 4.25rem Brandon for Carvana, sans-serif; /* @kind font */
+  --brand-xl-letter-spacing: -0.02em;
+  --brand-xl-paragraph-spacing: 1.5rem;
+  --brand-xl-paragraph-indent: 0; /* @kind font */
+  --brand-xl-text-case: uppercase;
+  --brand-xl-text-decoration: none;
+  --brand-lg: 900 3.5rem / 3.25rem Brandon for Carvana, sans-serif; /* @kind font */
+  --brand-lg-letter-spacing: -0.02em;
+  --brand-lg-paragraph-spacing: 1rem;
+  --brand-lg-paragraph-indent: 0; /* @kind font */
+  --brand-lg-text-case: uppercase;
+  --brand-lg-text-decoration: none;
+  --brand-md: 900 2.5rem / 2.5rem Brandon for Carvana, sans-serif; /* @kind font */
+  --brand-md-letter-spacing: -0.02em;
+  --brand-md-paragraph-spacing: 0.75rem;
+  --brand-md-paragraph-indent: 0; /* @kind font */
+  --brand-md-text-case: uppercase;
+  --brand-md-text-decoration: none;
+  --brand-sm: 900 2rem / 2rem Brandon for Carvana, sans-serif; /* @kind font */
+  --brand-sm-letter-spacing: -0.02em;
+  --brand-sm-paragraph-spacing: 0.625rem;
+  --brand-sm-paragraph-indent: 0; /* @kind font */
+  --brand-sm-text-case: uppercase;
+  --brand-sm-text-decoration: none;
+  --brand-xs: 900 1.75rem / 2rem Brandon for Carvana, sans-serif; /* @kind font */
+  --brand-xs-letter-spacing: -0.02em;
+  --brand-xs-paragraph-spacing: 0.625rem;
+  --brand-xs-text-case: uppercase;
+  --brand-xs-paragraph-indent: 0; /* @kind font */
+  --brand-xs-text-decoration: none;
+  --heading-5xl: 600 4.5rem / 4.25rem Inter, sans-serif; /* @kind font */
+  --heading-5xl-letter-spacing: -0.02em;
+  --heading-5xl-paragraph-spacing: 1rem;
+  --heading-5xl-text-case: none;
+  --heading-5xl-paragraph-indent: 0; /* @kind font */
+  --heading-5xl-text-decoration: none;
+  --heading-4xl: 600 3.5rem / 4rem Inter, sans-serif; /* @kind font */
+  --heading-4xl-letter-spacing: -0.02em;
+  --heading-4xl-paragraph-spacing: 1rem;
+  --heading-4xl-paragraph-indent: 0; /* @kind font */
+  --heading-4xl-text-decoration: none;
+  --heading-4xl-text-case: none;
+  --heading-3xl: 600 2.5rem / 2.75rem Inter, sans-serif; /* @kind font */
+  --heading-3xl-letter-spacing: -0.02em;
+  --heading-3xl-paragraph-spacing: 1rem;
+  --heading-3xl-paragraph-indent: 0; /* @kind font */
+  --heading-3xl-text-case: none;
+  --heading-3xl-text-decoration: none;
+  --heading-2xl: 600 1.75rem / 2rem Inter, sans-serif; /* @kind font */
+  --heading-2xl-letter-spacing: -0.02em;
+  --heading-2xl-paragraph-spacing: 0.75rem;
+  --heading-2xl-paragraph-indent: 0; /* @kind font */
+  --heading-2xl-text-case: none;
+  --heading-2xl-text-decoration: none;
+  --heading-xl: 600 1.5rem / 1.75rem Inter, sans-serif; /* @kind font */
+  --heading-xl-letter-spacing: -0.01em;
+  --heading-xl-paragraph-spacing: 0.75rem;
+  --heading-xl-paragraph-indent: 0; /* @kind font */
+  --heading-xl-text-case: none;
+  --heading-xl-text-decoration: none;
+  --heading-lg: 600 1.25rem / 1.625rem Inter, sans-serif; /* @kind font */
+  --heading-lg-letter-spacing: -0.01em;
+  --heading-lg-paragraph-spacing: 0.625rem;
+  --heading-lg-paragraph-indent: 0; /* @kind font */
+  --heading-lg-text-case: none;
+  --heading-lg-text-decoration: none;
+  --heading-md: 600 1.125rem / 1.5rem Inter, sans-serif; /* @kind font */
+  --heading-md-letter-spacing: 0em;
+  --heading-md-paragraph-spacing: 0.625rem;
+  --heading-md-paragraph-indent: 0; /* @kind font */
+  --heading-md-text-case: none;
+  --heading-md-text-decoration: none;
+  --heading-sm: 600 1rem / 1.25rem Inter, sans-serif; /* @kind font */
+  --heading-sm-letter-spacing: 0em;
+  --heading-sm-paragraph-spacing: 0.5rem;
+  --heading-sm-paragraph-indent: 0; /* @kind font */
+  --heading-sm-text-case: none;
+  --heading-sm-text-decoration: none;
+  --heading-xs: 600 0.875rem / 1.125rem Inter, sans-serif; /* @kind font */
+  --heading-xs-letter-spacing: 0em;
+  --heading-xs-paragraph-spacing: 0.5rem;
+  --heading-xs-paragraph-indent: 0; /* @kind font */
+  --heading-xs-text-case: none;
+  --heading-xs-text-decoration: none;
+  --label-lg: 500 1.125rem / 1.75rem Inter, sans-serif; /* @kind font */
+  --label-lg-letter-spacing: 0em;
+  --label-lg-paragraph-spacing: 1rem;
+  --label-lg-paragraph-indent: 0; /* @kind font */
+  --label-lg-text-case: none;
+  --label-lg-text-decoration: none;
+  --label-md: 500 1rem / 1.5rem Inter, sans-serif; /* @kind font */
+  --label-md-letter-spacing: 0em;
+  --label-md-paragraph-spacing: 1rem;
+  --label-md-paragraph-indent: 0; /* @kind font */
+  --label-md-text-case: none;
+  --label-md-text-decoration: none;
+  --label-sm: 500 0.875rem / 1.25rem Inter, sans-serif; /* @kind font */
+  --label-sm-letter-spacing: 0em;
+  --label-sm-paragraph-spacing: 0.75rem;
+  --label-sm-paragraph-indent: 0; /* @kind font */
+  --label-sm-text-case: none;
+  --label-sm-text-decoration: none;
+  --label-xs: 500 0.75rem / 1.125rem Inter, sans-serif; /* @kind font */
+  --label-xs-letter-spacing: 0em;
+  --label-xs-paragraph-spacing: 0.5rem;
+  --label-xs-paragraph-indent: 0; /* @kind font */
+  --label-xs-text-case: none;
+  --label-xs-text-decoration: none;
+  --body-regular-xl: 400 1.25rem / 1.875rem Inter, sans-serif; /* @kind font */
+  --body-regular-xl-letter-spacing: 0em;
+  --body-regular-xl-paragraph-spacing: 1.5rem;
+  --body-regular-xl-paragraph-indent: 0; /* @kind font */
+  --body-regular-xl-text-case: none;
+  --body-regular-xl-text-decoration: none;
+  --body-regular-lg: 400 1.125rem / 1.75rem Inter, sans-serif; /* @kind font */
+  --body-regular-lg-letter-spacing: 0em;
+  --body-regular-lg-paragraph-spacing: 1rem;
+  --body-regular-lg-paragraph-indent: 0; /* @kind font */
+  --body-regular-lg-text-case: none;
+  --body-regular-lg-text-decoration: none;
+  --body-regular-md: 400 1rem / 1.5rem Inter, sans-serif; /* @kind font */
+  --body-regular-md-letter-spacing: 0em;
+  --body-regular-md-paragraph-spacing: 1rem;
+  --body-regular-md-paragraph-indent: 0; /* @kind font */
+  --body-regular-md-text-case: none;
+  --body-regular-md-text-decoration: none;
+  --body-regular-sm: 400 0.875rem / 1.25rem Inter, sans-serif; /* @kind font */
+  --body-regular-sm-letter-spacing: 0em;
+  --body-regular-sm-paragraph-spacing: 0.75rem;
+  --body-regular-sm-paragraph-indent: 0; /* @kind font */
+  --body-regular-sm-text-case: none;
+  --body-regular-sm-text-decoration: none;
+  --body-regular-xs: 400 0.75rem / 1.125rem Inter, sans-serif; /* @kind font */
+  --body-regular-xs-letter-spacing: 0em;
+  --body-regular-xs-paragraph-spacing: 0.5rem;
+  --body-regular-xs-paragraph-indent: 0; /* @kind font */
+  --body-regular-xs-text-case: none;
+  --body-regular-xs-text-decoration: none;
+  --body-strong-xl: 600 1.25rem / 1.875rem Inter, sans-serif; /* @kind font */
+  --body-strong-xl-letter-spacing: 0em;
+  --body-strong-xl-paragraph-spacing: 1.5rem;
+  --body-strong-xl-paragraph-indent: 0; /* @kind font */
+  --body-strong-xl-text-case: none;
+  --body-strong-xl-text-decoration: none;
+  --body-strong-lg: 600 1.125rem / 1.75rem Inter, sans-serif; /* @kind font */
+  --body-strong-lg-letter-spacing: 0em;
+  --body-strong-lg-paragraph-spacing: 1rem;
+  --body-strong-lg-paragraph-indent: 0; /* @kind font */
+  --body-strong-lg-text-case: none;
+  --body-strong-lg-text-decoration: none;
+  --body-strong-md: 600 1rem / 1.5rem Inter, sans-serif; /* @kind font */
+  --body-strong-md-letter-spacing: 0em;
+  --body-strong-md-paragraph-spacing: 1rem;
+  --body-strong-md-paragraph-indent: 0; /* @kind font */
+  --body-strong-md-text-case: none;
+  --body-strong-md-text-decoration: none;
+  --body-strong-sm: 600 0.875rem / 1.25rem Inter, sans-serif; /* @kind font */
+  --body-strong-sm-letter-spacing: 0em;
+  --body-strong-sm-paragraph-spacing: 0.75rem;
+  --body-strong-sm-paragraph-indent: 0; /* @kind font */
+  --body-strong-sm-text-case: none;
+  --body-strong-sm-text-decoration: none;
+  --body-strong-xs: 600 0.75rem / 1.125rem Inter, sans-serif; /* @kind font */
+  --body-strong-xs-letter-spacing: 0em;
+  --body-strong-xs-paragraph-spacing: 0.5rem;
+  --body-strong-xs-paragraph-indent: 0; /* @kind font */
+  --body-strong-xs-text-case: none;
+  --body-strong-xs-text-decoration: none;
+  --body-link-xl: 500 1.25rem / 1.875rem Inter, sans-serif; /* @kind font */
+  --body-link-xl-letter-spacing: 0em;
+  --body-link-xl-paragraph-spacing: 1.5rem;
+  --body-link-xl-paragraph-indent: 0; /* @kind font */
+  --body-link-xl-text-case: none;
+  --body-link-xl-text-decoration: underline;
+  --body-link-lg: 500 1.125rem / 1.75rem Inter, sans-serif; /* @kind font */
+  --body-link-lg-letter-spacing: 0em;
+  --body-link-lg-paragraph-spacing: 1rem;
+  --body-link-lg-paragraph-indent: 0; /* @kind font */
+  --body-link-lg-text-case: none;
+  --body-link-lg-text-decoration: underline;
+  --body-link-md: 500 1rem / 1.5rem Inter, sans-serif; /* @kind font */
+  --body-link-md-letter-spacing: 0em;
+  --body-link-md-paragraph-spacing: 1rem;
+  --body-link-md-paragraph-indent: 0; /* @kind font */
+  --body-link-md-text-case: none;
+  --body-link-md-text-decoration: underline;
+  --body-link-sm: 500 0.875rem / 1.25rem Inter, sans-serif; /* @kind font */
+  --body-link-sm-letter-spacing: 0em;
+  --body-link-sm-paragraph-spacing: 0.75rem;
+  --body-link-sm-paragraph-indent: 0; /* @kind font */
+  --body-link-sm-text-case: none;
+  --body-link-sm-text-decoration: underline;
+  --body-link-xs: 500 0.75rem / 1.125rem Inter, sans-serif; /* @kind font */
+  --body-link-xs-letter-spacing: 0em;
+  --body-link-xs-paragraph-spacing: 0.5rem;
+  --body-link-xs-paragraph-indent: 0; /* @kind font */
+  --body-link-xs-text-case: none;
+  --body-link-xs-text-decoration: underline;
+}

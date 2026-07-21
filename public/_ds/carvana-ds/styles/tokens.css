@@ -1,0 +1,28 @@
+/* Carvana DS token bundle — import this single file to get everything set up.
+ * Order matters: fonts → reference primitives → semantic theme → typography.
+ *
+ * Body must have data-theme="carvana" for the semantic theme layer to apply.
+ * (Dark mode: data-theme="carvana-dark".)
+ */
+@import url("./fonts.css");
+@import url("./reference.css");
+@import url("./cvna-theme.css");
+@import url("./cvna-dark-theme.css");
+@import url("./cvna-typography.css");
+
+/* Sensible page defaults so components inherit correct type/color without
+ * every consumer having to re-declare them. */
+html,
+body {
+  background: var(--canvas-default);
+  color: var(--text-default);
+  font: var(--body-regular-md);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
