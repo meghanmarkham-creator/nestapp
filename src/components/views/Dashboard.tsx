@@ -5,14 +5,15 @@
 
 import { useState } from "react";
 import {
-  CATEGORIES, LEVELS, READINESS_THRESHOLD, atRisk, cohortName, cohorts,
+  CATEGORIES, LEVELS, READINESS_THRESHOLD, allAdvocates, atRisk, cohortName, cohorts,
   gradeOf, opportunities, strengths, trainerById,
 } from "@/lib/nest-data";
 import { deriveStats, resolveAdv } from "@/lib/derive";
 import { NestShell, Panel } from "@/components/shell";
 import { NIcon } from "@/components/icons";
-import { Dropdown, Segmented, LevelTag, EmptyState } from "@/components/ui";
+import { Dropdown, Segmented, LevelTag, Avatar, EmptyState } from "@/components/ui";
 import { GradePill, DistBar, CatBars, momColor } from "@/components/charts";
+import { PENDING_LABELS } from "@/lib/momScale";
 import { useStore } from "@/lib/store";
 import type { Advocate, CatScore, Grade } from "@/lib/types";
 import { StakeholderEmailModal } from "./EmailReport";
@@ -22,12 +23,13 @@ const f1 = (v: number) => Number(v).toFixed(1);
 interface ViewProps {
   onOpenPlan: (id: string) => void;
   onOpenClass: (id: string) => void;
+  onOpenAdvocate: (id: string) => void;
   onNav: (key: string) => void;
   search: string;
   onSearch: (v: string) => void;
 }
 
-export const Dashboard = ({ onOpenPlan, onOpenClass, onNav, search, onSearch }: ViewProps) => {
+export const Dashboard = ({ onOpenPlan, onOpenClass, onOpenAdvocate, onNav, search, onSearch }: ViewProps) => {
   const store = useStore();
   const S = store.get();
   const [cohort, setCohort] = useState("all");
@@ -58,16 +60,30 @@ export const Dashboard = ({ onOpenPlan, onOpenClass, onNav, search, onSearch }: 
       .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
       .map((c) => ({ value: c.id, label: c.name, hint: c.level })),
   ];
+  // Default view: no classes yet → show the advocate pool as a whole; once classes
+  // exist → show by class.
+  const noClasses = allClasses.length === 0;
+
   const levelOpts = [
     { value: "all", label: "All levels" },
-    ...LEVELS.map((l) => ({ value: l, label: l, count: allClasses.filter((c) => c.level === l).length })).filter((o) => o.count > 0),
+    ...LEVELS.map((l) => ({
+      value: l, label: l,
+      count: noClasses ? allAdvocates.filter((a) => a.level === l).length : allClasses.filter((c) => c.level === l).length,
+    })).filter((o) => o.count > 0),
   ];
 
   const shown = allClasses
     .filter((c) => (cohort === "all" || c.id === cohort) && (level === "all" || c.level === level))
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 
-  const scopeAdvs = allClasses.filter((c) => level === "all" || c.level === level).flatMap((c) => c.advocates) as Advocate[];
+  // roster (pool) advocates when there are no classes
+  const poolAdvs = allAdvocates
+    .filter((a) => level === "all" || a.level === level)
+    .sort((a, b) => b.composite - a.composite);
+
+  const scopeAdvs = (noClasses
+    ? poolAdvs
+    : allClasses.filter((c) => level === "all" || c.level === level).flatMap((c) => c.advocates)) as Advocate[];
   const scopeN = scopeAdvs.length || 1;
   const scopeAvg = Math.round(scopeAdvs.reduce((s, a) => s + a.composite, 0) / scopeN);
   const scopeGrade = gradeOf(scopeAvg);
@@ -95,7 +111,11 @@ export const Dashboard = ({ onOpenPlan, onOpenClass, onNav, search, onSearch }: 
           <div style={{ font: "var(--label-sm)", color: "rgba(255,255,255,.6)", textTransform: "uppercase", letterSpacing: ".08em" }}>{scopeLabel} readiness</div>
           <div style={{ font: "var(--heading-xl)", fontWeight: 800, margin: "6px 0 8px", letterSpacing: "-.01em", lineHeight: 1.2, maxWidth: 540 }}>{scopeReady}% on track to graduate ready</div>
           <p style={{ font: "var(--body-regular-md)", color: "rgba(255,255,255,.78)", margin: 0, maxWidth: 520 }}>
-            {level === "all" ? "Across" : `${level} advocates across`} <strong style={{ color: "#fff" }}>{scopeClassCount} {scopeClassCount === 1 ? "class" : "classes"}</strong>. <strong style={{ color: "#fff" }}>{scopeAtRisk} {scopeAtRisk === 1 ? "advocate is" : "advocates are"}</strong> below the readiness threshold and need coaching support.
+            {noClasses ? (
+              <>Across a pool of <strong style={{ color: "#fff" }}>{scopeAdvs.length} {scopeAdvs.length === 1 ? "advocate" : "advocates"}</strong> with roleplay scores. <strong style={{ color: "#fff" }}>{scopeAtRisk} {scopeAtRisk === 1 ? "is" : "are"}</strong> below the roleplay readiness threshold. Build cohorts on Class Assignments to track by class.</>
+            ) : (
+              <>{level === "all" ? "Across" : `${level} advocates across`} <strong style={{ color: "#fff" }}>{scopeClassCount} {scopeClassCount === 1 ? "class" : "classes"}</strong>. <strong style={{ color: "#fff" }}>{scopeAtRisk} {scopeAtRisk === 1 ? "advocate is" : "advocates are"}</strong> below the readiness threshold and need coaching support.</>
+            )}
           </p>
           <div style={{ display: "flex", gap: 10, marginTop: 18, flexWrap: "wrap" }}>
             <HeroChip v={scopeDist.A + scopeDist.B} k="On track" def="grades A–B" dot="var(--reference-green-400)" />
@@ -120,13 +140,25 @@ export const Dashboard = ({ onOpenPlan, onOpenClass, onNav, search, onSearch }: 
       {/* Active classes */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div>
-          <h2 style={{ font: "var(--heading-sm)", color: "var(--text-strong)", margin: 0 }}>Active classes</h2>
-          <div style={{ font: "var(--body-regular-sm)", color: "var(--text-weak)", marginTop: 2 }}>{shown.length} of {allClasses.length} classes shown</div>
+          <h2 style={{ font: "var(--heading-sm)", color: "var(--text-strong)", margin: 0 }}>{noClasses ? "Advocate pool" : "Active classes"}</h2>
+          <div style={{ font: "var(--body-regular-sm)", color: "var(--text-weak)", marginTop: 2 }}>
+            {noClasses
+              ? `${poolAdvs.length} advocates · no classes yet — build cohorts on Class Assignments`
+              : `${shown.length} of ${allClasses.length} classes shown`}
+          </div>
         </div>
-        <Dropdown value={cohort} onChange={setCohort} options={classOpts} width={236} align="right" icon={<NIcon.calendar s={16} />} />
+        {!noClasses && <Dropdown value={cohort} onChange={setCohort} options={classOpts} width={236} align="right" icon={<NIcon.calendar s={16} />} />}
       </div>
       <Segmented value={level} onChange={setLevel} options={levelOpts} />
 
+      {noClasses ? (
+        <div className="nest-cards" style={{ gap: 16 }}>
+          {poolAdvs.map((a) => (
+            <RosterCard key={a.id} a={a} onOpen={() => onOpenAdvocate(a.id)} onPlan={() => onOpenPlan(a.id)} />
+          ))}
+          {poolAdvs.length === 0 && <EmptyState title="No advocates match this level" sub="Try a different level." />}
+        </div>
+      ) : (
       <div className="nest-cards" style={{ gap: 20 }}>
         {shown.map((c) =>
           c.isCustom && !c.scoredCount ? (
@@ -166,9 +198,9 @@ export const Dashboard = ({ onOpenPlan, onOpenClass, onNav, search, onSearch }: 
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 11, marginTop: 2 }}>
-                <MomBar label="Production" value={momAvg(c, "productionMom")} />
+                <MomBar label="Production" pending={PENDING_LABELS.production} />
                 <MomBar label="AI Roleplay" value={momAvg(c, "roleplayMom")} />
-                <MomBar label="AI Assessments" value={assessMom(c)} />
+                <MomBar label="AI Assessments" pending={PENDING_LABELS.assessment} />
               </div>
 
               <div>
@@ -196,6 +228,7 @@ export const Dashboard = ({ onOpenPlan, onOpenClass, onNav, search, onSearch }: 
         )}
         {shown.length === 0 && <EmptyState title="No classes match these filters" sub="Try a different cohort or level." />}
       </div>
+      )}
 
       {/* Lower row */}
       <div className="nest-lower" style={{ gap: 24, alignItems: "start" }}>
@@ -278,12 +311,18 @@ const HeroChip = ({ k, v, def, dot }: { k: string; v: number; def: string; dot: 
   </div>
 );
 
-const momAvg = (c: { advocates: Advocate[] }, key: "productionMom" | "roleplayMom") =>
+const momAvg = (c: { advocates: Advocate[] }, key: "roleplayMom") =>
   c.advocates.reduce((s, a) => s + a[key], 0) / c.advocates.length;
-const assessMom = (c: { advocates: Advocate[] }) =>
-  c.advocates.reduce((s, a) => s + a.assessment, 0) / c.advocates.length / 20;
 
-const MomBar = ({ label, value }: { label: string; value: number }) => {
+const MomBar = ({ label, value, pending }: { label: string; value?: number | null; pending?: string }) => {
+  if (pending != null || value == null || Number.isNaN(value)) {
+    return (
+      <div style={{ display: "grid", gridTemplateColumns: "116px 1fr", alignItems: "center", gap: 10 }}>
+        <span style={{ font: "var(--body-regular-sm)", color: "var(--text-default)" }}>{label}</span>
+        <span style={{ font: "var(--body-regular-sm)", color: "var(--text-weak)", textAlign: "right", fontStyle: "italic" }}>{pending ?? "—"}</span>
+      </div>
+    );
+  }
   const v = Number(value);
   return (
     <div style={{ display: "grid", gridTemplateColumns: "116px 1fr 34px", alignItems: "center", gap: 10 }}>
@@ -295,6 +334,32 @@ const MomBar = ({ label, value }: { label: string; value: number }) => {
     </div>
   );
 };
+
+// Advocate roster card — shown on the dashboard when no classes exist yet.
+const RosterCard = ({ a, onOpen, onPlan }: { a: Advocate; onOpen: () => void; onPlan: () => void }) => (
+  <article style={{ ...dbCard, gap: 12, cursor: "pointer" }} onClick={onOpen}>
+    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <Avatar name={a.name} size={40} grade={a.grade} />
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ font: "var(--body-strong-md)", color: "var(--text-strong)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.name}</div>
+        <div style={{ font: "var(--body-regular-xs)", color: "var(--text-weak)" }}>{a.leader ? `Leader: ${a.leader}` : "Unassigned"}</div>
+      </div>
+      <GradePill letter={a.grade} size={34} />
+    </div>
+    <MomBar label="AI Roleplay" value={a.roleplayMom} />
+    <MomBar label="Production" pending={PENDING_LABELS.production} />
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+      <MiniStat tone="up" label="Strength" value={a.strength.label} score={`${f1(a.strength.val)}/5`} />
+      <MiniStat tone="down" label="Focus" value={a.opportunity.label} score={`${f1(a.opportunity.val)}/5`} />
+    </div>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: "1px solid var(--border-subtle)", paddingTop: 12, marginTop: "auto" }}>
+      <span style={{ font: "var(--body-regular-xs)", color: "var(--text-weak)" }}>{a.sims ?? 0} sims · roleplay {f1(a.roleplayMom)}/5</span>
+      {a.composite < READINESS_THRESHOLD && (
+        <a onClick={(e) => { e.stopPropagation(); onPlan(); }} style={dbLinkArrow}>Coaching plan <span style={{ display: "inline-flex" }}><NIcon.chevRight s={14} /></span></a>
+      )}
+    </div>
+  </article>
+);
 
 const MiniStat = ({ tone, label, value, score }: { tone: "up" | "down"; label: string; value: string; score: string }) => {
   const strong = tone === "up";

@@ -6,11 +6,12 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import {
-  CATEGORIES, GRADES, advocateById, allAdvocates, calls, cohortById, cohorts, fmtDur,
+  CATEGORIES, GRADES, advocateById, allAdvocates, calls, cohortName, cohorts, fmtDur,
 } from "@/lib/nest-data";
+import { PENDING_LABELS } from "@/lib/momScale";
 import { useStore } from "@/lib/store";
 import { nestToast } from "@/lib/toast";
-import { CatBars, GradePill, ReadinessDonut, momColor, scoreColor } from "@/components/charts";
+import { CatBars, GradePill, ReadinessDonut, momColor } from "@/components/charts";
 import { Avatar, EmptyState } from "@/components/ui";
 import { NestShell, Panel } from "@/components/shell";
 import { NIcon } from "@/components/icons";
@@ -69,20 +70,17 @@ export const ReportCardsView = ({ onNav, onOpenAdvocate, search, onSearch }: Rep
             </div>
             {matches.length > 0 && (
               <div style={{ position: "absolute", top: 58, left: 0, right: 0, background: "var(--canvas-default)", borderRadius: "var(--border-radius-md)", boxShadow: "0 16px 40px rgba(13,55,94,.24)", padding: 6, zIndex: 20, textAlign: "left", maxHeight: 340, overflowY: "auto" }}>
-                {matches.map((a) => {
-                  const c = cohortById(a.cohort)!;
-                  return (
+                {matches.map((a) => (
                     <div key={a.id} onClick={() => setSel(a.id)} className="nest-row" style={{ display: "flex", alignItems: "center", gap: 11, padding: "10px 12px", borderRadius: 8, cursor: "pointer" }}>
                       <Avatar name={a.name} size={34} grade={a.grade} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ font: "var(--body-strong-sm)", color: "var(--text-strong)" }}>{a.name}</div>
-                        <div style={{ font: "var(--body-regular-xs)", color: "var(--text-weak)" }}>{c.name} · {c.level}</div>
+                        <div style={{ font: "var(--body-regular-xs)", color: "var(--text-weak)" }}>{cohortName(a.cohort)} · {a.level ?? "—"}</div>
                       </div>
                       <GradePill letter={a.grade} size={28} />
                       {store.isGraduated(a.id) && <span style={{ font: "var(--label-xs)", fontWeight: 700, color: "var(--text-success)", background: "var(--background-success-subtle)", borderRadius: 999, padding: "2px 9px" }}>Graduated</span>}
                     </div>
-                  );
-                })}
+                  ))}
               </div>
             )}
           </div>
@@ -140,7 +138,6 @@ export const FullReportCard = ({ advId, onBack, onNav, onOpenAdvocate, search, o
   const S = store.get();
   const a = advocateById(advId);
   if (!a) return null;
-  const c = cohortById(a.cohort)!;
   const g = GRADES[a.grade];
   const lead = leadFor(a);
   const graduated = store.isGraduated(advId);
@@ -150,11 +147,11 @@ export const FullReportCard = ({ advId, onBack, onNav, onOpenAdvocate, search, o
   const myCalls = calls.filter((cl) => cl.advId === advId);
   const myCoachings = (buildCoachingList(S) as any[]).filter((r) => r.advId === advId);
 
-  const metrics = [
+  const metrics: { label: string; value: string; unit: string; color: string; pending?: boolean }[] = [
     { label: "Average Roleplay MOM", value: _pf1(a.roleplayMom), unit: "/ 5", color: momColor(a.roleplayMom) },
-    { label: "Average Production MOM", value: _pf1(a.productionMom), unit: "/ 5", color: momColor(a.productionMom) },
-    { label: "Overall Assessment", value: a.assessment, unit: "/ 100", color: scoreColor(a.assessment) },
-    { label: "Attendance", value: a.attendance, unit: "%", color: scoreColor(a.attendance) },
+    { label: "Average Production MOM", value: PENDING_LABELS.production, unit: "", color: "var(--text-weak)", pending: true },
+    { label: "Overall Assessment", value: PENDING_LABELS.assessment, unit: "", color: "var(--text-weak)", pending: true },
+    { label: "Attendance", value: "—", unit: "", color: "var(--text-weak)", pending: true },
   ];
 
   const setMeeting = () => {
@@ -162,11 +159,11 @@ export const FullReportCard = ({ advId, onBack, onNav, onOpenAdvocate, search, o
     store.addCoaching({ id, advId, kind: "Team Lead Handoff", focus: `Readiness ${a.composite} · grade ${a.grade}`, assignee: lead, source: "handoff", priority: false });
     nestToast(`Team Lead Handoff created for ${lead}`, "success");
   };
-  const doGraduate = () => { store.graduate(advId, a.cohort); nestToast(`${a.name} graduated — moved to Archive`, "success"); };
+  const doGraduate = () => { store.graduate(advId, a.cohort ?? ""); nestToast(`${a.name} graduated — moved to Archive`, "success"); };
   const doRelease = () => { store.release(advId); nestToast(`${a.name} released — priority coaching sent to Shelby Gary`, "success"); };
 
   return (
-    <NestShell active="report" title="Report card" subtitle={`${a.name} · ${c.name}`} onNav={onNav} searchValue={search} onSearch={onSearch}
+    <NestShell active="report" title="Report card" subtitle={`${a.name} · ${cohortName(a.cohort)}`} onNav={onNav} searchValue={search} onSearch={onSearch}
       actions={<button style={rGhost} onClick={() => window.print()}><NIcon.download s={16} /> Export PDF</button>}>
       <BackBar onBack={onBack} label="Back to search" />
 
@@ -184,8 +181,8 @@ export const FullReportCard = ({ advId, onBack, onNav, onOpenAdvocate, search, o
               <div style={{ font: "var(--label-sm)", color: "var(--text-weak)", textTransform: "uppercase", letterSpacing: ".12em", marginTop: 12 }}>The Nest · Advocate Report Card</div>
             </div>
             <div style={{ textAlign: "right", font: "var(--body-regular-sm)", color: "var(--text-weak)" }}>
-              <div><strong style={{ color: "var(--text-strong)" }}>{c.name}</strong></div>
-              <div>{c.level} · {c.cohortLabel}</div>
+              <div><strong style={{ color: "var(--text-strong)" }}>{cohortName(a.cohort)}</strong></div>
+              <div>{a.level ?? "—"}{a.hireDate ? ` · Hired ${a.hireDate}` : ""}</div>
             </div>
           </div>
 
@@ -197,7 +194,7 @@ export const FullReportCard = ({ advId, onBack, onNav, onOpenAdvocate, search, o
                 <Avatar name={a.name} size={52} grade={a.grade} />
                 <div>
                   <div style={{ font: "var(--heading-lg)", fontWeight: 800, color: "var(--text-strong)" }}>{a.name}</div>
-                  <div style={{ font: "var(--body-regular-md)", color: "var(--text-weak)" }}>Customer Advocate · {c.level}</div>
+                  <div style={{ font: "var(--body-regular-md)", color: "var(--text-weak)" }}>Customer Advocate · {a.level ?? "—"}</div>
                 </div>
               </div>
               <div style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" }}>
@@ -214,8 +211,14 @@ export const FullReportCard = ({ advId, onBack, onNav, onOpenAdvocate, search, o
               <div key={m.label} style={{ border: "1px solid var(--border-subtle)", borderRadius: "var(--border-radius-md)", padding: "14px 16px" }}>
                 <div style={{ font: "var(--label-xs)", color: "var(--text-weak)", textTransform: "uppercase", letterSpacing: ".03em", minHeight: 28 }}>{m.label}</div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginTop: 6 }}>
-                  <span style={{ font: "var(--heading-lg)", fontWeight: 800, color: m.color }}>{m.value}</span>
-                  <span style={{ font: "var(--body-regular-sm)", color: "var(--text-weak)" }}>{m.unit}</span>
+                  {m.pending ? (
+                    <span style={{ font: "var(--body-strong-md)", color: "var(--text-weak)" }}>{m.value}</span>
+                  ) : (
+                    <>
+                      <span style={{ font: "var(--heading-lg)", fontWeight: 800, color: m.color }}>{m.value}</span>
+                      <span style={{ font: "var(--body-regular-sm)", color: "var(--text-weak)" }}>{m.unit}</span>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
@@ -273,7 +276,7 @@ export const FullReportCard = ({ advId, onBack, onNav, onOpenAdvocate, search, o
           <div style={{ marginTop: 22 }}>
             <SectionH>Notes for team leader</SectionH>
             <p style={{ margin: 0, font: "var(--body-regular-md)", color: "var(--text-default)", lineHeight: 1.55 }}>{a.note}</p>
-            <div style={{ font: "var(--body-regular-sm)", color: "var(--text-weak)", marginTop: 10 }}>Handoff to <strong style={{ color: "var(--text-strong)" }}>{lead}</strong> · prepared by Coach {c.lead}</div>
+            <div style={{ font: "var(--body-regular-sm)", color: "var(--text-weak)", marginTop: 10 }}>Handoff to <strong style={{ color: "var(--text-strong)" }}>{lead}</strong></div>
           </div>
 
           {/* below-C meeting prompt */}
@@ -282,7 +285,7 @@ export const FullReportCard = ({ advId, onBack, onNav, onOpenAdvocate, search, o
               <span style={{ width: 38, height: 38, borderRadius: 10, background: "var(--canvas-default)", color: "var(--text-warning)", display: "grid", placeItems: "center", flexShrink: 0 }}><NIcon.alert s={20} /></span>
               <div style={{ flex: 1, minWidth: 200 }}>
                 <div style={{ font: "var(--body-strong-sm)", color: "var(--text-strong)" }}>Readiness is below a C</div>
-                <div style={{ font: "var(--body-regular-sm)", color: "var(--text-default)" }}>Set up a Team Lead Handoff so {lead} and Coach {c.lead} can align on whether {a.name.split(" ")[0]} can graduate.</div>
+                <div style={{ font: "var(--body-regular-sm)", color: "var(--text-default)" }}>Set up a Team Lead Handoff so {lead} can align on whether {a.name.split(" ")[0]} can graduate.</div>
               </div>
               <button style={rMeeting} onClick={setMeeting}><NIcon.calendar s={16} /> Set a meeting</button>
             </div>
@@ -340,11 +343,10 @@ export const ArchiveView = ({ onNav, search, onSearch }: ArchiveViewProps) => {
             </thead>
             <tbody>
               {rows.map(({ a, meta }) => {
-                const c = cohortById(a.cohort)!;
                 return (
                   <tr key={a.id} style={{ borderTop: "1px solid var(--border-subtle)" }}>
                     <td style={{ padding: "12px 16px" }}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><Avatar name={a.name} size={32} grade={a.grade} /><span style={{ font: "var(--body-strong-sm)", color: "var(--text-strong)" }}>{a.name}</span></div></td>
-                    <td style={{ padding: "12px 16px", font: "var(--body-regular-sm)", color: "var(--text-default)" }}>{c.name}</td>
+                    <td style={{ padding: "12px 16px", font: "var(--body-regular-sm)", color: "var(--text-default)" }}>{cohortName(a.cohort)}</td>
                     <td style={{ padding: "12px 16px" }}><div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><GradePill letter={a.grade} size={26} /><span style={{ font: "var(--body-strong-sm)", color: "var(--text-strong)" }}>{a.composite}</span></div></td>
                     <td style={{ padding: "12px 16px", font: "var(--body-regular-sm)", color: "var(--text-default)" }}>{a.strength.label}</td>
                     <td style={{ padding: "12px 16px", font: "var(--body-regular-sm)", color: "var(--text-default)" }}>{a.opportunity.label}</td>

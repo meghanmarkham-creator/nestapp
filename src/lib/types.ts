@@ -45,15 +45,19 @@ export interface Advocate {
   id: string;
   name: string;
   email?: string;
-  cohort: string; // home class id
-  composite: number; // 0–100
+  cohort: string | null; // home/assigned class id (null = unassigned pool)
+  composite: number; // 0–100 (provisional: roleplay-only until production/assessment land)
   grade: GradeLetter;
-  roleplayMom: number; // 1–5
-  productionMom: number; // 1–5
+  roleplayMom: number; // 1–5 (live)
+  /** null until the Production MOM query is wired ("Coming Soon"). */
+  productionMom: number | null; // 1–5
   roleplay: number; // 0–100 (roleplayMom×20)
-  production: number; // 0–100
-  assessment: number; // 0–100
-  attendance: number; // 0–100
+  /** null until the Production MOM query is wired ("Coming Soon"). */
+  production: number | null; // 0–100
+  /** null until the Assessment query is wired ("Not Yet Calculated"). */
+  assessment: number | null; // 0–100
+  /** null until an Attendance source is wired. */
+  attendance: number | null; // 0–100
   delta: number; // wk change
   cats: CatMap;
   strength: CatScore;
@@ -62,6 +66,18 @@ export interface Advocate {
   liveCalls: number;
   missed: number;
   note: string;
+  // --- live roster fields (from the Workday role-map join) ---
+  /** direct leader / team lead name from the roster. */
+  leader?: string;
+  hireDate?: string;
+  /** simplified job title (Advocate/Intern/Specialist/Team Lead). */
+  job?: string;
+  /** mapped training level for filters/tags. */
+  level?: string;
+  /** number of scored simulations backing the roleplay MOM. */
+  sims?: number;
+  /** true for advocates sourced from the live MOM/roster query. */
+  live?: boolean;
   /** true for advocates added manually on Class Assignments (no scores yet). */
   manual?: boolean;
 }

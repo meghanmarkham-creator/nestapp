@@ -151,7 +151,7 @@ function mockRows(): MomRow[] {
     name: a.name,
     email: a.email,
     roleplayMom: a.roleplayMom,
-    productionMom: a.productionMom,
+    productionMom: a.productionMom ?? undefined,
     cats: a.cats,
   }));
 }

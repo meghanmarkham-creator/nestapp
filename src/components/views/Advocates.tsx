@@ -6,8 +6,9 @@
 import { useState, type ReactNode } from "react";
 import {
   CATEGORIES, GRADES, LEVELS, READINESS_THRESHOLD,
-  advocateById, allAdvocates, cohortById, cohorts,
+  advocateById, allAdvocates, cohortName, cohorts,
 } from "@/lib/nest-data";
+import { PENDING_LABELS } from "@/lib/momScale";
 import { NestShell, Panel } from "@/components/shell";
 import { NIcon } from "@/components/icons";
 import { Dropdown, Avatar, LevelTag, EmptyState } from "@/components/ui";
@@ -34,10 +35,11 @@ export const AdvocatesView = ({ onNav, onOpenAdvocate, onOpenPlan, search, onSea
 
   const q = (search || "").trim().toLowerCase();
   const rows = allAdvocates.filter((a) => {
-    const c = cohortById(a.cohort)!;
+    const className = cohortName(a.cohort);
+    const lvl = a.level ?? "";
     if (grade !== "all" && a.grade !== grade) return false;
-    if (level !== "all" && c.level !== level) return false;
-    if (q && !(a.name.toLowerCase().includes(q) || c.name.toLowerCase().includes(q) || c.level.toLowerCase().includes(q))) return false;
+    if (level !== "all" && lvl !== level) return false;
+    if (q && !(a.name.toLowerCase().includes(q) || className.toLowerCase().includes(q) || lvl.toLowerCase().includes(q))) return false;
     return true;
   }).sort((a, b) => b.composite - a.composite);
 
@@ -62,15 +64,14 @@ export const AdvocatesView = ({ onNav, onOpenAdvocate, onOpenPlan, search, onSea
             </thead>
             <tbody>
               {rows.map((a) => {
-                const c = cohortById(a.cohort)!;
                 return (
                   <tr key={a.id} className="nest-row" onClick={() => onOpenAdvocate(a.id)} style={{ borderTop: "1px solid var(--border-subtle)", cursor: "pointer" }}>
                     <td style={tdA2}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><Avatar name={a.name} size={32} grade={a.grade} /><span style={{ font: "var(--body-strong-sm)", color: "var(--text-strong)" }}>{a.name}</span></div></td>
-                    <td style={tdA2}><span style={{ font: "var(--body-regular-sm)", color: "var(--text-default)" }}>{c.name}</span></td>
-                    <td style={tdA2}><LevelTag level={c.level} /></td>
+                    <td style={tdA2}><span style={{ font: "var(--body-regular-sm)", color: "var(--text-default)" }}>{cohortName(a.cohort)}</span></td>
+                    <td style={tdA2}><LevelTag level={a.level ?? "—"} /></td>
                     <td style={{ ...tdA2, textAlign: "center" }}><div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><GradePill letter={a.grade} size={26} /><span style={{ font: "var(--body-strong-sm)", color: "var(--text-strong)" }}>{a.composite}</span></div></td>
                     <td style={{ ...tdA2, textAlign: "center" }}><span style={{ font: "var(--body-strong-sm)", color: momColor(a.roleplayMom) }}>{_af1(a.roleplayMom)}</span></td>
-                    <td style={{ ...tdA2, textAlign: "center" }}><span style={{ font: "var(--body-strong-sm)", color: momColor(a.productionMom) }}>{_af1(a.productionMom)}</span></td>
+                    <td style={{ ...tdA2, textAlign: "center" }}><span style={{ font: "var(--body-regular-sm)", color: "var(--text-weak)" }}>{PENDING_LABELS.production}</span></td>
                     <td style={tdA2}><span style={{ font: "var(--body-regular-sm)", color: "var(--text-default)" }}>{a.opportunity.label}</span></td>
                     <td style={{ ...tdA2, textAlign: "right", whiteSpace: "nowrap" }}>
                       {a.composite < READINESS_THRESHOLD && <button style={aPlanBtn} onClick={(e) => { e.stopPropagation(); onOpenPlan(a.id); }}><NIcon.coaching s={14} /> Plan</button>}
@@ -99,19 +100,19 @@ interface AdvocateDetailProps {
 export const AdvocateDetail = ({ advId, onNav, onBack, onOpenPlan, onOpenClass }: AdvocateDetailProps) => {
   const a = advocateById(advId);
   if (!a) return null;
-  const c = cohortById(a.cohort)!;
+  const cohortId = a.cohort;
   const g = GRADES[a.grade];
-  const components: { label: string; val: number; weight: number; mom?: number }[] = [
+  const components: { label: string; val: number | null; weight: number; mom?: number; pending?: string }[] = [
     { label: "Roleplay MOM", val: a.roleplay, weight: 30, mom: a.roleplayMom },
-    { label: "Production MOM", val: a.production, weight: 30, mom: a.productionMom },
-    { label: "Assessment", val: a.assessment, weight: 25 },
-    { label: "Attendance", val: a.attendance, weight: 15 },
+    { label: "Production MOM", val: a.production, weight: 30, pending: PENDING_LABELS.production },
+    { label: "Assessment", val: a.assessment, weight: 25, pending: PENDING_LABELS.assessment },
+    { label: "Attendance", val: a.attendance, weight: 15, pending: "—" },
   ];
 
   return (
-    <NestShell active="advocate" title={a.name} subtitle={`${c.name} · ${c.level} · started ${c.cohortLabel}`} onNav={onNav}
+    <NestShell active="advocate" title={a.name} subtitle={`${cohortName(cohortId)} · ${a.level ?? "—"}${a.hireDate ? ` · Hired ${a.hireDate}` : ""}`} onNav={onNav}
       actions={<>
-        <button style={cBtnGhost} onClick={() => onOpenClass(c.id)}>View class</button>
+        {cohortId && <button style={cBtnGhost} onClick={() => onOpenClass(cohortId)}>View class</button>}
         <button style={aDetailPrimary} onClick={() => onOpenPlan(a.id)}><NIcon.coaching s={16} /> Generate coaching plan</button>
       </>}>
       <BackBar onBack={onBack} label="Advocates" />
@@ -140,15 +141,20 @@ export const AdvocateDetail = ({ advId, onNav, onBack, onOpenPlan, onOpenClass }
 
           <Panel title="Readiness breakdown" subtitle="How the composite score is built">
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {components.map((comp) => (
-                <div key={comp.label} style={{ display: "grid", gridTemplateColumns: "170px 1fr 92px", alignItems: "center", gap: 12 }}>
-                  <span style={{ font: "var(--body-regular-sm)", color: "var(--text-default)" }}>{comp.label} <span style={{ color: "var(--text-weak)" }}>· {comp.weight}%</span></span>
-                  <div style={{ height: 8, borderRadius: 999, background: "var(--reference-slate-100)", overflow: "hidden" }}>
-                    <div style={{ width: `${comp.val}%`, height: "100%", background: scoreColor(comp.val), borderRadius: 999 }} />
+              {components.map((comp) => {
+                const v = comp.val;
+                return (
+                  <div key={comp.label} style={{ display: "grid", gridTemplateColumns: "170px 1fr 92px", alignItems: "center", gap: 12 }}>
+                    <span style={{ font: "var(--body-regular-sm)", color: "var(--text-default)" }}>{comp.label} <span style={{ color: "var(--text-weak)" }}>· {comp.weight}%</span></span>
+                    <div style={{ height: 8, borderRadius: 999, background: "var(--reference-slate-100)", overflow: "hidden" }}>
+                      <div style={{ width: `${typeof v === "number" ? v : 0}%`, height: "100%", background: typeof v === "number" ? scoreColor(v) : "var(--text-weak)", borderRadius: 999 }} />
+                    </div>
+                    {typeof v === "number"
+                      ? <span style={{ font: "var(--body-strong-sm)", color: "var(--text-strong)", textAlign: "right" }}>{v}{comp.mom ? ` · ${_af1(comp.mom)}/5` : "%"}</span>
+                      : <span style={{ font: "var(--body-regular-sm)", color: "var(--text-weak)", textAlign: "right" }}>{comp.pending}</span>}
                   </div>
-                  <span style={{ font: "var(--body-strong-sm)", color: "var(--text-strong)", textAlign: "right" }}>{comp.val}{comp.mom ? ` · ${_af1(comp.mom)}/5` : "%"}</span>
-                </div>
-              ))}
+                );
+              })}
               <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid var(--border-subtle)", paddingTop: 12, marginTop: 2 }}>
                 <span style={{ font: "var(--body-strong-sm)", color: "var(--text-strong)" }}>Composite readiness</span>
                 <span style={{ font: "var(--body-strong-md)", color: g.text }}>{a.composite} · {a.grade}</span>
@@ -166,7 +172,7 @@ export const AdvocateDetail = ({ advId, onNav, onBack, onOpenPlan, onOpenClass }
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <KV label="Roleplay sessions" value={a.sessions} />
               <KV label="Live calls scored" value={a.liveCalls} />
-              <KV label="Attendance" value={`${a.attendance}%`} />
+              <KV label="Attendance" value={<span style={{ color: "var(--text-weak)" }}>—</span>} />
               <KV label="Sessions missed" value={a.missed} />
             </div>
           </Panel>

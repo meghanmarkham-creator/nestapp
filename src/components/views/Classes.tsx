@@ -11,6 +11,7 @@ import { NestShell, Panel } from "@/components/shell";
 import { NIcon } from "@/components/icons";
 import { Dropdown, Segmented, Avatar, LevelTag, StatusBadge, EmptyState } from "@/components/ui";
 import { GradePill, DistBar, Sparkline, CatBars, momColor } from "@/components/charts";
+import { PENDING_LABELS } from "@/lib/momScale";
 import type { Advocate } from "@/lib/types";
 
 const _f1 = (v: number) => Number(v).toFixed(1);
@@ -72,7 +73,9 @@ export const ClassesView = ({ onNav, onOpenClass, search, onSearch }: ClassesVie
             ))}
           </tbody>
         </table>
-        {shown.length === 0 && <EmptyState title="No classes match these filters" sub="Try a different cohort or level." />}
+        {shown.length === 0 && (cohorts.length === 0
+          ? <EmptyState title="No classes yet" sub="Create classes on Class Assignments." />
+          : <EmptyState title="No classes match these filters" sub="Try a different cohort or level." />)}
       </Panel>
     </NestShell>
   );
@@ -91,7 +94,12 @@ interface ClassDetailProps {
 export const ClassDetail = ({ classId, onNav, onBack, onOpenPlan, onOpenAdvocate, onGraduate }: ClassDetailProps) => {
   const c = cohortById(classId);
   const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" }>({ key: "composite", dir: "desc" });
-  if (!c) return null;
+  if (!c) return (
+    <NestShell active="classes" title="Class" onNav={onNav}>
+      <BackBar onBack={onBack} label="All classes" />
+      <EmptyState title="Class not found" sub="This class may have been removed or is not available." />
+    </NestShell>
+  );
 
   const cols: { key: string; label: string; align: React.CSSProperties["textAlign"] }[] = [
     { key: "composite", label: "Readiness", align: "left" },
@@ -150,8 +158,12 @@ export const ClassDetail = ({ classId, onNav, onBack, onOpenPlan, onOpenAdvocate
                     <td style={tdC}><div style={{ display: "flex", alignItems: "center", gap: 9 }}><GradePill letter={a.grade} size={26} /><span style={{ font: "var(--body-strong-sm)", color: "var(--text-strong)" }}>{a.composite}</span></div></td>
                     <MomCell v={a.roleplayMom} />
                     <MomCell v={a.productionMom} />
-                    <td style={{ ...tdC, textAlign: "center" }}><span style={{ font: "var(--body-regular-sm)", color: "var(--text-default)" }}>{a.assessment}</span></td>
-                    <td style={{ ...tdC, textAlign: "center" }}><span style={{ font: "var(--body-regular-sm)", color: "var(--text-default)" }}>{a.attendance}%</span></td>
+                    <td style={{ ...tdC, textAlign: "center" }}>{a.assessment == null
+                      ? <span style={{ font: "var(--body-regular-sm)", color: "var(--text-weak)" }}>{PENDING_LABELS.assessment}</span>
+                      : <span style={{ font: "var(--body-regular-sm)", color: "var(--text-default)" }}>{a.assessment}</span>}</td>
+                    <td style={{ ...tdC, textAlign: "center" }}>{a.attendance == null
+                      ? <span style={{ font: "var(--body-regular-sm)", color: "var(--text-weak)" }}>—</span>
+                      : <span style={{ font: "var(--body-regular-sm)", color: "var(--text-default)" }}>{a.attendance}%</span>}</td>
                     <td style={{ ...tdC, textAlign: "right", whiteSpace: "nowrap" }}>
                       {a.composite < READINESS_THRESHOLD
                         ? <button style={cPlanBtn} onClick={() => onOpenPlan(a.id)}><NIcon.coaching s={14} /> Plan</button>
@@ -182,9 +194,11 @@ export const ClassDetail = ({ classId, onNav, onBack, onOpenPlan, onOpenAdvocate
 
 const avgOf = (arr: Advocate[], key: string) => arr.reduce((s, a) => s + (a as any)[key], 0) / arr.length;
 
-const MomCell = ({ v }: { v: number }) => (
+const MomCell = ({ v }: { v: number | null }) => (
   <td style={{ padding: "12px 16px", textAlign: "center" }}>
-    <span style={{ font: "var(--body-strong-sm)", color: momColor(v) }}>{_f1(v)}</span>
+    {v == null
+      ? <span style={{ font: "var(--body-regular-sm)", color: "var(--text-weak)" }}>{PENDING_LABELS.production}</span>
+      : <span style={{ font: "var(--body-strong-sm)", color: momColor(v) }}>{_f1(v)}</span>}
   </td>
 );
 

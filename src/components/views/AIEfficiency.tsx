@@ -6,7 +6,7 @@
 
 import { useState } from "react";
 import {
-  CATEGORIES, advocateById, avgCallLen, calls, cohortById, cutoffCalls,
+  CATEGORIES, advocateById, avgCallLen, calls, cohortName, cutoffCalls,
   failedCalls, fmtDur, scoredCount, transcriptFor,
 } from "@/lib/nest-data";
 import { useStore } from "@/lib/store";
@@ -82,14 +82,13 @@ export const AIEfficiencyView = ({ onNav, onOpenAdvocate, search, onSearch }: Vi
             <tbody>
               {list.map((call) => {
                 const a = advocateById(call.advId)!;
-                const c = cohortById(a.cohort)!;
                 const omitted = !!S.omits[call.id];
                 return (
                   <tr key={call.id} className="nest-row" style={{ borderTop: "1px solid var(--border-subtle)", opacity: omitted ? 0.6 : 1 }}>
                     <td style={tdE}>
                       <div onClick={() => onOpenAdvocate(a.id)} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                         <Avatar name={a.name} size={30} grade={a.grade} />
-                        <div><div style={{ font: "var(--body-strong-sm)", color: "var(--text-strong)" }}>{a.name}</div><div style={{ font: "var(--body-regular-xs)", color: "var(--text-weak)" }}>{c.name}</div></div>
+                        <div><div style={{ font: "var(--body-strong-sm)", color: "var(--text-strong)" }}>{a.name}</div><div style={{ font: "var(--body-regular-xs)", color: "var(--text-weak)" }}>{cohortName(a.cohort)}</div></div>
                       </div>
                     </td>
                     <td style={tdE}><span style={{ font: "var(--body-regular-sm)", color: "var(--text-default)" }}>{call.scenario}</span></td>
