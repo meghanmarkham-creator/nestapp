@@ -70,9 +70,11 @@ export const MOM_QUERY = `
       PREFERRED_NAME,
       EMAIL_ADDRESS,
       LEADER,
-      DECODE(COMPREHENSION_SCORE,          'POOR', 1.5, 'AVERAGE', 3, 'GREAT', 4.5) AS C,
-      DECODE(CLARITY_OF_NEXT_STEPS_SCORE,  'POOR', 1.5, 'AVERAGE', 3, 'GREAT', 4.5) AS CL,
-      DECODE(CUSTOMER_FELT_HEARD_SCORE,    'POOR', 1.5, 'AVERAGE', 3, 'GREAT', 4.5) AS H
+      -- Bucket → 1–5 midpoints (POOR 1–2→1.5, AVERAGE 3–4→3.5, GREAT 5→5).
+      -- Mirrors MOM_BUCKET_SCORE in lib/momScale.ts (keep in sync).
+      DECODE(COMPREHENSION_SCORE,          'POOR', 1.5, 'AVERAGE', 3.5, 'GREAT', 5) AS C,
+      DECODE(CLARITY_OF_NEXT_STEPS_SCORE,  'POOR', 1.5, 'AVERAGE', 3.5, 'GREAT', 5) AS CL,
+      DECODE(CUSTOMER_FELT_HEARD_SCORE,    'POOR', 1.5, 'AVERAGE', 3.5, 'GREAT', 5) AS H
     FROM ${VIEW_FQN}
   )
   SELECT
